@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>دفترچه تلفن</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            direction: rtl;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        #search {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        a, button {
+            padding: 5px 10px;
+            margin: 2px;
+            text-decoration: none;
+            color: white;
+        }
+        a {
+            background-color: #4CAF50;
+        }
+        button {
+            background-color: #f44336;
+            border: none;
+            cursor: pointer;
+        }
+        #addContact {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>دفترچه تلفن</h1>
+    <a href="{{ url_for('add') }}" id="addContact">افزودن مخاطب</a>
+    <input type="text" id="search" placeholder="جستجو...">
+    <table>
+        <thead>
+            <tr>
+                <th>نام</th>
+                <th>نام خانوادگی</th>
+                <th>تلفن</th>
+                <th>سمت</th>
+                <th>دپارتمان</th>
+                <th>محل استقرار</th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+        <tbody id="contactsTable">
+            {% for contact in contacts %}
+            <tr>
+                <td>{{ contact['first_name'] }}</td>
+                <td>{{ contact['last_name'] }}</td>
+                <td>{{ contact['phone'] }}</td>
+                <td>{{ contact['position'] }}</td>
+                <td>{{ contact['department'] }}</td>
+                <td>{{ contact['location'] }}</td>
+                <td>
+                    <a href="{{ url_for('edit', id=contact['id']) }}">ویرایش</a>
+                    <form action="{{ url_for('delete', id=contact['id']) }}" method="post" style="display: inline;">
+                        <button type="submit">حذف</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        // جاوااسکریپت برای جستجوی بلادرنگ
+        const searchInput = document.getElementById('search');
+        const tableRows = document.querySelectorAll('#contactsTable tr');
+
+        searchInput.addEventListener('keyup', function() {
+            const query = searchInput.value.toLowerCase();
+            tableRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                const rowText = Array.from(cells).map(cell => cell.textContent.toLowerCase()).join(' ');
+                if (rowText.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

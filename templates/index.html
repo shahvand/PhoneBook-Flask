@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>دفترچه تلفن</title>
+    <style>
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: url('/static/fonts/Vazirmatn-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+        }
+        /* نوار کناری */
+        .sidebar {
+            position: fixed;
+            right: 0; /* تنظیم به راست برای صفحات RTL */
+            top: 0;
+            width: 220px; /* افزایش عرض */
+            height: 100%;
+            background-color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+        }
+        .sidebar a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 20px 15px;
+            font-size: 20px; /* افزایش اندازه فونت */
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: #34495e;
+            transform: translateX(-10px); /* حرکت جزئی به سمت چپ در هاور */
+        }
+        .sidebar img {
+            width: 40px; /* افزایش اندازه آیکون */
+            height: 40px;
+            margin-left: 10px; /* تنظیم فاصله برای RTL */
+        }
+        .main-content {
+            margin-right: 230px; /* فاصله از سمت راست برای نوار کناری */
+            padding: 20px;
+            background-color: #fff;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #ecf0f1;
+            padding: 10px 20px;
+            margin-left: -20px;
+            margin-right: -20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        header img {
+            height: 50px;
+        }
+        #search {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 16px;
+        }
+        th {
+            background-color: #34495e;
+            color: #ecf0f1;
+            cursor: pointer;
+        }
+        th.sortable:hover {
+            background-color: #2c3e50;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        a.button, button {
+            padding: 10px 20px;
+            margin: 2px;
+            text-decoration: none;
+            color: white;
+            background-color: #3498db;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        a.button:hover, button:hover {
+            background-color: #2980b9;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- نوار کناری -->
+    <div class="sidebar">
+        <a href="#" title="حضور و غیاب">
+            حضور و غیاب
+            <img src="/static/attendance_icon.png" alt="حضور و غیاب">
+        </a>
+        <a href="#" title="اتوماسیون اداری">
+            اتوماسیون اداری
+            <img src="/static/automation_icon.png" alt="اتوماسیون اداری">
+        </a>
+        <a href="#" title="ایمیل تحت وب">
+            ایمیل تحت وب
+            <img src="/static/webmail_icon.png" alt="ایمیل تحت وب">
+        </a>
+        <a href="#" title="هلپ">
+            هلپ
+            <img src="/static/help_icon.png" alt="هلپ">
+        </a>
+        <a href="#" title="اخبار">
+            اخبار
+            <img src="/static/news_icon.png" alt="اخبار">
+        </a>
+        <a href="#" title="فایل شیرینگ">
+            فایل شیرینگ
+            <img src="/static/filesharing_icon.png" alt="فایل شیرینگ">
+        </a>
+        <a href="{{ url_for('view_logs') }}" title="لاگ‌ها">
+            لاگ‌ها
+            <img src="/static/logs_icon.png" alt="لاگ‌ها">
+        </a>
+    </div>
+
+    <!-- محتوای اصلی -->
+    <div class="main-content">
+        <!-- هدر با لوگو -->
+        <header>
+            <h1>دفترچه تلفن</h1>
+            <img src="/static/logo.png" alt="لوگو">
+        </header>
+
+        <!-- دکمه افزودن مخاطب حذف شده است -->
+
+        <input type="text" id="search" placeholder="جستجو...">
+        <table id="contactsTable">
+            <thead>
+                <tr>
+                    <th class="sortable">نام و نام خانوادگی</th>
+                    <th class="sortable">تلفن</th>
+                    <th class="sortable">سمت</th>
+                    <th class="sortable">دپارتمان</th>
+                    <th class="sortable">محل استقرار</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for contact in contacts %}
+                <tr>
+                    <td>{{ contact['full_name'] }}</td>
+                    <td>{{ contact['phone'] }}</td>
+                    <td>{{ contact['position'] if contact['position'] else '-' }}</td>
+                    <td>{{ contact['department'] if contact['department'] else '-' }}</td>
+                    <td>{{ contact['location'] if contact['location'] else '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('edit', id=contact['id']) }}" class="button">ویرایش</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <script>
+            // جاوااسکریپت برای جستجوی بلادرنگ
+            const searchInput = document.getElementById('search');
+            const tableRows = document.querySelectorAll('#contactsTable tbody tr');
+
+            searchInput.addEventListener('keyup', function() {
+                const query = searchInput.value.toLowerCase();
+                tableRows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    const rowText = Array.from(cells).map(cell => cell.textContent.toLowerCase()).join(' ');
+                    if (rowText.includes(query)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+
+            // اسکریپت برای مرتب‌سازی ستون‌ها
+            document.querySelectorAll('th.sortable').forEach((header, index) => {
+                header.addEventListener('click', () => {
+                    sortTable(index);
+                });
+            });
+
+            function sortTable(columnIndex) {
+                const table = document.getElementById('contactsTable');
+                const tbody = table.tBodies[0];
+                const rows = Array.from(tbody.rows);
+                const isAscending = headerSortDirection[columnIndex] || false;
+
+                rows.sort((a, b) => {
+                    let cellA = a.cells[columnIndex].innerText.trim();
+                    let cellB = b.cells[columnIndex].innerText.trim();
+
+                    if (columnIndex === 1) { // ستون شماره تلفن
+                        cellA = parseInt(cellA, 10);
+                        cellB = parseInt(cellB, 10);
+                        return isAscending ? cellA - cellB : cellB - cellA;
+                    } else {
+                        cellA = cellA.toLowerCase();
+                        cellB = cellB.toLowerCase();
+                        if (cellA < cellB) return isAscending ? -1 : 1;
+                        if (cellA > cellB) return isAscending ? 1 : -1;
+                        return 0;
+                    }
+                });
+
+                // به‌روزرسانی جهت مرتب‌سازی
+                headerSortDirection[columnIndex] = !isAscending;
+
+                // افزودن ردیف‌های مرتب‌شده به tbody
+                tbody.append(...rows);
+            }
+
+            // ذخیره جهت مرتب‌سازی برای هر ستون
+            const headerSortDirection = { 1: true }; // ستون شماره تلفن به صورت صعودی
+
+            // مرتب‌سازی پیش‌فرض بر اساس شماره تلفن (ستون دوم، ایندکس 1)
+            window.onload = function() {
+                sortTable(1);
+            };
+        </script>
+    </div>
+</body>
+</html>

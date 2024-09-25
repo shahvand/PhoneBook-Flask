@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>ویرایش مخاطب</title>
+    <style>
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: url('/static/fonts/Vazirmatn-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+        }
+        /* نوار کناری */
+        .sidebar {
+            position: fixed;
+            right: 0; /* تنظیم به راست برای صفحات RTL */
+            top: 0;
+            width: 220px;
+            height: 100%;
+            background-color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+        }
+        .sidebar a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 20px 15px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: #34495e;
+            transform: translateX(-10px);
+        }
+        .sidebar img {
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+        }
+        .main-content {
+            margin-right: 230px; /* فاصله از سمت راست برای نوار کناری */
+            padding: 20px;
+            background-color: #fff;
+            min-height: 100vh;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ecf0f1;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            color: #34495e;
+            font-size: 18px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        input[readonly] {
+            background-color: #ecf0f1;
+            cursor: not-allowed;
+        }
+        button {
+            margin-top: 25px;
+            padding: 12px;
+            width: 100%;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 18px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        button:hover {
+            background-color: #2980b9;
+            transform: scale(1.02);
+        }
+        a.back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #3498db;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s;
+        }
+        a.back-link:hover {
+            color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <!-- نوار کناری -->
+    <div class="sidebar">
+        <a href="{{ url_for('index') }}" title="دفترچه تلفن">
+            دفترچه تلفن
+            <img src="/static/phonebook_icon.png" alt="دفترچه تلفن">
+        </a>
+    </div>
+
+    <div class="main-content">
+        <h1>ویرایش مخاطب</h1>
+        <form method="post">
+            <label>نام و نام خانوادگی:</label>
+            <input type="text" name="full_name" value="{{ contact['full_name'] }}" required>
+
+            <label>تلفن:</label>
+            <input type="text" name="phone" value="{{ contact['phone'] }}" required readonly>
+
+            <label>سمت:</label>
+            <input type="text" name="position" value="{{ contact['position'] }}">
+
+            <label>دپارتمان:</label>
+            <input type="text" name="department" value="{{ contact['department'] }}">
+
+            <label>محل استقرار:</label>
+            <input type="text" name="location" value="{{ contact['location'] }}">
+
+            <button type="submit">ذخیره</button>
+        </form>
+        <a href="{{ url_for('index') }}" class="back-link">بازگشت به لیست مخاطبین</a>
+    </div>
+</body>
+</html>

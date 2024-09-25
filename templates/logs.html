@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>لاگ‌ها</title>
+    <style>
+        @font-face {
+            font-family: 'Vazirmatn';
+            src: url('/static/fonts/Vazirmatn-Regular.woff2') format('woff2');
+            font-weight: normal;
+            font-style: normal;
+        }
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+        }
+        /* نوار کناری */
+        .sidebar {
+            position: fixed;
+            right: 0; /* تنظیم به راست برای صفحات RTL */
+            top: 0;
+            width: 220px;
+            height: 100%;
+            background-color: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            padding-top: 20px;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+        }
+        .sidebar a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 20px 15px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .sidebar a:hover {
+            background-color: #34495e;
+            transform: translateX(-10px);
+        }
+        .sidebar img {
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+        }
+        .main-content {
+            margin-right: 230px; /* فاصله از سمت راست برای نوار کناری */
+            padding: 20px;
+            background-color: #fff;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #ecf0f1;
+            padding: 10px 20px;
+            margin-left: -20px;
+            margin-right: -20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        header img {
+            height: 50px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 16px;
+        }
+        th {
+            background-color: #34495e;
+            color: #ecf0f1;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        a.back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #3498db;
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s;
+        }
+        a.back-link:hover {
+            color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <!-- نوار کناری -->
+    <div class="sidebar">
+        <a href="{{ url_for('index') }}" title="دفترچه تلفن">
+            دفترچه تلفن
+            <img src="/static/phonebook_icon.png" alt="دفترچه تلفن">
+        </a>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <h1>لاگ‌ها</h1>
+            <img src="/static/logo.png" alt="لوگو">
+        </header>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>مخاطب</th>
+                    <th>عملیات</th>
+                    <th>آی‌پی</th>
+                    <th>تاریخ و زمان</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log['full_name'] if log['full_name'] else '---' }}</td>
+                    <td>{{ log['action'] }}</td>
+                    <td>{{ log['ip_address'] }}</td>
+                    <td>{{ log['timestamp'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="{{ url_for('index') }}" class="back-link">بازگشت به لیست مخاطبین</a>
+    </div>
+</body>
+</html>
