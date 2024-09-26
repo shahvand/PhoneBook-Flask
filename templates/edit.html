@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fa">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <title>ویرایش مخاطب</title>
@@ -17,39 +17,42 @@
             padding: 0;
             direction: rtl;
         }
-        /* نوار کناری */
+        /* نوار کناری مدرن */
         .sidebar {
             position: fixed;
-            right: 0; /* تنظیم به راست برای صفحات RTL */
+            right: 0;
             top: 0;
             width: 220px;
             height: 100%;
-            background-color: #2c3e50;
+            background-color: #ffffff;
             display: flex;
             flex-direction: column;
             padding-top: 20px;
             box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            border-left: 1px solid #e0e0e0;
         }
         .sidebar a {
-            color: #ecf0f1;
+            color: #333333;
             text-decoration: none;
-            padding: 20px 15px;
-            font-size: 20px;
+            padding: 15px 20px;
+            font-size: 18px;
             display: flex;
             align-items: center;
-            transition: background-color 0.3s, transform 0.3s;
+            text-align: right;
+            direction: rtl;
+            transition: background-color 0.2s;
+            font-family: 'Vazirmatn', sans-serif;
         }
         .sidebar a:hover {
-            background-color: #34495e;
-            transform: translateX(-10px);
+            background-color: #f5f5f5;
         }
         .sidebar img {
-            width: 40px;
-            height: 40px;
-            margin-left: 10px;
+            width: 24px;
+            height: 24px;
+            margin-left: 15px;
         }
         .main-content {
-            margin-right: 230px; /* فاصله از سمت راست برای نوار کناری */
+            margin-right: 230px;
             padding: 20px;
             background-color: #fff;
             min-height: 100vh;
@@ -58,11 +61,13 @@
             color: #2c3e50;
             text-align: center;
             margin-bottom: 30px;
+            font-size: 24px;
+            font-family: 'Vazirmatn', sans-serif;
         }
         form {
             max-width: 600px;
             margin: 0 auto;
-            background-color: #ecf0f1;
+            background-color: #fafafa;
             padding: 30px;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -72,46 +77,49 @@
             margin-top: 15px;
             color: #34495e;
             font-size: 18px;
+            font-family: 'Vazirmatn', sans-serif;
         }
         input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             box-sizing: border-box;
-            border: 1px solid #bdc3c7;
-            border-radius: 4px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
             font-size: 16px;
+            font-family: 'Vazirmatn', sans-serif;
         }
         input[readonly] {
-            background-color: #ecf0f1;
+            background-color: #e9ecef;
             cursor: not-allowed;
         }
         button {
             margin-top: 25px;
             padding: 12px;
             width: 100%;
-            background-color: #3498db;
+            background-color: #007BFF;
             color: white;
             border: none;
             cursor: pointer;
             border-radius: 6px;
             font-size: 18px;
-            transition: background-color 0.3s, transform 0.2s;
+            transition: background-color 0.2s;
+            font-family: 'Vazirmatn', sans-serif;
         }
         button:hover {
-            background-color: #2980b9;
-            transform: scale(1.02);
+            background-color: #0056b3;
         }
         a.back-link {
             display: block;
             text-align: center;
             margin-top: 20px;
-            color: #3498db;
+            color: #007BFF;
             text-decoration: none;
             font-size: 18px;
-            transition: color 0.3s;
+            transition: color 0.2s;
+            font-family: 'Vazirmatn', sans-serif;
         }
         a.back-link:hover {
-            color: #2980b9;
+            color: #0056b3;
         }
     </style>
 </head>
@@ -119,8 +127,8 @@
     <!-- نوار کناری -->
     <div class="sidebar">
         <a href="{{ url_for('index') }}" title="دفترچه تلفن">
-            دفترچه تلفن
             <img src="/static/phonebook_icon.png" alt="دفترچه تلفن">
+            دفترچه تلفن
         </a>
     </div>
 
