@@ -2,7 +2,9 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>دفترچه تلفن</title>
+    <title>پورتال داخلی شرکت</title>
+    <!-- آیکون‌های Material Design -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         @font-face {
             font-family: 'Vazirmatn';
@@ -12,7 +14,7 @@
         }
         body {
             font-family: 'Vazirmatn', sans-serif;
-            background-color: #f9f9f9;
+            background-color: #f5f5f5;
             margin: 0;
             padding: 0;
             direction: rtl;
@@ -25,111 +27,162 @@
             width: 220px;
             height: 100%;
             background-color: #ffffff;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
             padding-top: 20px;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
             border-left: 1px solid #e0e0e0;
         }
         .sidebar a {
-            color: #333333;
+            color: #424242;
             text-decoration: none;
             padding: 15px 20px;
-            font-size: 18px;
+            font-size: 16px;
             display: flex;
             align-items: center;
-            text-align: right;
-            direction: rtl;
             transition: background-color 0.2s;
             font-family: 'Vazirmatn', sans-serif;
         }
         .sidebar a:hover {
-            background-color: #f5f5f5;
+            background-color: #eeeeee;
         }
-        .sidebar img {
-            width: 24px;
-            height: 24px;
+        .sidebar i {
+            font-size: 24px;
             margin-left: 15px;
         }
         .main-content {
-            margin-right: 230px;
+            margin-right: 220px;
             padding: 20px;
-            background-color: #fff;
+            background-color: #f5f5f5;
             min-height: 100vh;
         }
         header {
             background-color: #ffffff;
-            padding: 10px 20px;
-            margin-right: -20px;
-            margin-left: -20px;
+            padding: 16px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         header h1 {
             margin: 0;
-            color: #2c3e50;
+            color: #212121;
             font-size: 24px;
-            font-family: 'Vazirmatn', sans-serif;
+            font-weight: normal;
         }
         header img {
             height: 40px;
+            margin-left: 16px;
+        }
+        /* استایل ساعت دیجیتال */
+        .clock-logo-container {
+            display: flex;
+            align-items: center;
+        }
+        .clock {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            color: #212121;
+            font-family: 'Vazirmatn', sans-serif;
+            margin-left: 16px;
+        }
+        .clock .time {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .clock .date {
+            font-size: 14px;
+            color: #757575;
         }
         #search {
             width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
+            padding: 12px 16px;
+            margin: 24px 0;
             box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 6px;
+            border: none;
+            border-radius: 4px;
             font-size: 16px;
-            direction: rtl;
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             font-family: 'Vazirmatn', sans-serif;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: #fff;
-            direction: rtl;
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            overflow: hidden;
         }
         th, td {
-            border-bottom: 1px solid #e0e0e0;
-            padding: 12px 8px;
+            padding: 8px 16px; /* کاهش فاصله بین ردیف‌ها */
             text-align: center;
             font-size: 16px;
             font-family: 'Vazirmatn', sans-serif;
         }
         th {
-            background-color: #fafafa;
-            color: #333333;
+            background-color: #f5f5f5;
+            color: #757575;
             cursor: pointer;
+            user-select: none;
         }
         th.sortable:hover {
-            background-color: #f0f0f0;
+            background-color: #eeeeee;
         }
-        tr:nth-child(even) {
-            background-color: #fcfcfc;
+        tr {
+            border-bottom: 1px solid #e0e0e0;
         }
-        /* استایل مدرن و تخت برای دکمه‌ها */
+        tr:last-child {
+            border-bottom: none;
+        }
+        /* بولد کردن متن ستون 'نام و نام خانوادگی' */
+        td:first-child {
+            font-weight: bold;
+        }
         a.button, button {
-            padding: 10px 20px;
-            margin: 2px;
+            padding: 10px 16px;
+            margin: 0;
             text-decoration: none;
             color: #ffffff;
-            background-color: #007BFF;
+            background-color: #4285F4;
             border: none;
             cursor: pointer;
-            border-radius: 6px;
-            font-size: 16px;
+            border-radius: 4px;
+            font-size: 14px;
             transition: background-color 0.2s;
-            direction: rtl;
-            text-align: center;
             font-family: 'Vazirmatn', sans-serif;
+            display: inline-block;
         }
         a.button:hover, button:hover {
-            background-color: #0056b3;
+            background-color: #3367D6;
+        }
+        /* واکنش‌گرایی */
+        @media (max-width: 768px) {
+            .main-content {
+                margin-right: 0;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                flex-direction: row;
+                justify-content: space-around;
+                box-shadow: none;
+                border-left: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .clock-logo-container {
+                margin-top: 10px;
+                align-items: flex-start;
+            }
+            .clock {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
@@ -137,37 +190,43 @@
     <!-- نوار کناری -->
     <div class="sidebar">
         <a href="#" title="حضور و غیاب">
-            <img src="/static/attendance_icon.png" alt="حضور و غیاب">
+            <i class="material-icons">schedule</i>
             حضور و غیاب
         </a>
         <a href="#" title="اتوماسیون اداری">
-            <img src="/static/automation_icon.png" alt="اتوماسیون اداری">
+            <i class="material-icons">work</i>
             اتوماسیون اداری
         </a>
         <a href="#" title="ایمیل تحت وب">
-            <img src="/static/webmail_icon.png" alt="ایمیل تحت وب">
+            <i class="material-icons">email</i>
             ایمیل تحت وب
         </a>
         <a href="#" title="هلپ">
-            <img src="/static/help_icon.png" alt="هلپ">
+            <i class="material-icons">help_outline</i>
             هلپ
         </a>
         <a href="#" title="اخبار">
-            <img src="/static/news_icon.png" alt="اخبار">
+            <i class="material-icons">announcement</i>
             اخبار
         </a>
         <a href="#" title="فایل شیرینگ">
-            <img src="/static/filesharing_icon.png" alt="فایل شیرینگ">
+            <i class="material-icons">folder_shared</i>
             فایل شیرینگ
         </a>
     </div>
 
     <!-- محتوای اصلی -->
     <div class="main-content">
-        <!-- هدر با لوگو -->
+        <!-- هدر با ساعت دیجیتال و لوگو در کنار هم -->
         <header>
-            <h1>دفترچه تلفن</h1>
-            <img src="/static/logo.png" alt="لوگو">
+            <h1>پورتال داخلی شرکت</h1>
+            <div class="clock-logo-container">
+                <div class="clock">
+                    <div class="time" id="time"></div>
+                    <div class="date" id="date"></div>
+                </div>
+                <img src="/static/logo.png" alt="لوگو">
+            </div>
         </header>
 
         <input type="text" id="search" placeholder="جستجو...">
@@ -198,7 +257,66 @@
             </tbody>
         </table>
 
+        <!-- اسکریپت‌ها -->
         <script>
+            // توابع تبدیل تاریخ میلادی به شمسی
+            function gregorian_to_jalali(gy, gm, gd) {
+                var g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
+                var jy = (gy <= 1600) ? 0 : 979;
+                gy -= (gy <= 1600) ? 621 : 1600;
+                var gy2 = (gm > 2) ? (gy + 1) : gy;
+                var days = (365 * gy) + Math.floor((gy2 + 3) / 4) - Math.floor((gy2 + 99) / 100)
+                    + Math.floor((gy2 + 399) / 400) - 80 + gd + g_d_m[gm - 1];
+                jy += 33 * Math.floor(days / 12053);
+                days %= 12053;
+                jy += 4 * Math.floor(days / 1461);
+                days %= 1461;
+                if (days > 365) {
+                    jy += Math.floor((days - 1) / 365);
+                    days = (days - 1) % 365;
+                }
+                var jm = (days < 186) ? 1 + Math.floor(days / 31) : 7 + Math.floor((days - 186) / 30);
+                var jd = 1 + ((days < 186) ? (days % 31) : ((days - 186) % 30));
+                return [jy, jm, jd];
+            }
+
+            // تابع به‌روزرسانی ساعت و تاریخ
+            function updateClock() {
+                var now = new Date();
+                var hours = now.getHours();
+                var minutes = now.getMinutes();
+                var seconds = now.getSeconds();
+
+                // افزودن صفر قبل از اعداد کمتر از 10
+                hours = (hours < 10) ? '0' + hours : hours;
+                minutes = (minutes < 10) ? '0' + minutes : minutes;
+                seconds = (seconds < 10) ? '0' + seconds : seconds;
+
+                var timeString = hours + ':' + minutes + ':' + seconds;
+                document.getElementById('time').textContent = timeString;
+
+                // تبدیل تاریخ به شمسی
+                var gYear = now.getFullYear();
+                var gMonth = now.getMonth() + 1;
+                var gDay = now.getDate();
+                var jalaliDate = gregorian_to_jalali(gYear, gMonth, gDay);
+
+                var jYear = jalaliDate[0];
+                var jMonth = jalaliDate[1];
+                var jDay = jalaliDate[2];
+
+                var months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+                              'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+
+                var dateString = jDay + ' ' + months[jMonth - 1] + ' ' + jYear;
+                document.getElementById('date').textContent = dateString;
+            }
+
+            // به‌روزرسانی ساعت هر ثانیه
+            setInterval(updateClock, 1000);
+            // به‌روزرسانی اولیه
+            updateClock();
+
             // جاوااسکریپت برای جستجوی بلادرنگ
             const searchInput = document.getElementById('search');
             const tableRows = document.querySelectorAll('#contactsTable tbody tr');
@@ -234,8 +352,8 @@
                     let cellB = b.cells[columnIndex].innerText.trim();
 
                     if (columnIndex === 1) { // ستون شماره تلفن
-                        cellA = parseInt(cellA, 10);
-                        cellB = parseInt(cellB, 10);
+                        cellA = parseInt(cellA.replace(/\D/g,''), 10);
+                        cellB = parseInt(cellB.replace(/\D/g,''), 10);
                         return isAscending ? cellA - cellB : cellB - cellA;
                     } else {
                         cellA = cellA.toLowerCase();
@@ -254,7 +372,7 @@
             }
 
             // ذخیره جهت مرتب‌سازی برای هر ستون
-            const headerSortDirection = { 1: true }; // ستون شماره تلفن به صورت صعودی
+            const headerSortDirection = { 1: true };
 
             // مرتب‌سازی پیش‌فرض بر اساس شماره تلفن (ستون دوم، ایندکس 1)
             window.onload = function() {
