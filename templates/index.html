@@ -2,7 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>پورتال داخلی شرکت</title>
+    <title>شبکه آفتاب</title>
     <!-- آیکون‌های Material Design -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
@@ -81,19 +81,16 @@
         }
         .clock {
             display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            color: #212121;
+            align-items: center; /* ساعت و تاریخ در یک خط */
+            color: #757575;
             font-family: 'Vazirmatn', sans-serif;
             margin-left: 16px;
         }
-        .clock .time {
-            font-size: 18px;
-            font-weight: bold;
+        .clock .date, .clock .time {
+            font-size: 18px; /* بزرگ‌تر کردن اندازه فونت */
         }
-        .clock .date {
-            font-size: 14px;
-            color: #757575;
+        .clock .time {
+            margin-right: 16px; /* فاصله بین ساعت و تاریخ */
         }
         #search {
             width: 100%;
@@ -116,7 +113,7 @@
             overflow: hidden;
         }
         th, td {
-            padding: 8px 16px; /* کاهش فاصله بین ردیف‌ها */
+            padding: 8px 16px;
             text-align: center;
             font-size: 16px;
             font-family: 'Vazirmatn', sans-serif;
@@ -140,22 +137,41 @@
         td:first-child {
             font-weight: bold;
         }
+        /* استایل دکمه‌های عمومی */
         a.button, button {
             padding: 10px 16px;
             margin: 0;
             text-decoration: none;
-            color: #ffffff;
-            background-color: #4285F4;
+            color: #424242;
+            background-color: #eeeeee;
             border: none;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 8px;
             font-size: 14px;
             transition: background-color 0.2s;
             font-family: 'Vazirmatn', sans-serif;
             display: inline-block;
         }
         a.button:hover, button:hover {
-            background-color: #3367D6;
+            background-color: #e0e0e0;
+        }
+        /* استایل جدید برای دکمه "ویرایش" */
+        a.button-edit {
+            padding: 10px 16px;
+            margin: 0;
+            text-decoration: none;
+            color: #424242;
+            background-color: #eeeeee;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: background-color 0.2s;
+            font-family: 'Vazirmatn', sans-serif;
+            display: inline-block;
+        }
+        a.button-edit:hover {
+            background-color: #e0e0e0;
         }
         /* واکنش‌گرایی */
         @media (max-width: 768px) {
@@ -182,6 +198,7 @@
             }
             .clock {
                 margin-left: 0;
+                justify-content: flex-start;
             }
         }
     </style>
@@ -213,17 +230,22 @@
             <i class="material-icons">folder_shared</i>
             فایل شیرینگ
         </a>
+        <!-- افزودن لینک به مسیر شبکه ویندوزی -->
+        <a href="file://192.168.210.10/Software" title="نرم‌افزارها">
+            <i class="material-icons">get_app</i>
+            نرم‌افزارها
+        </a>
     </div>
 
     <!-- محتوای اصلی -->
     <div class="main-content">
         <!-- هدر با ساعت دیجیتال و لوگو در کنار هم -->
         <header>
-            <h1>پورتال داخلی شرکت</h1>
+            <h1>شبکه آفتاب</h1>
             <div class="clock-logo-container">
                 <div class="clock">
-                    <div class="time" id="time"></div>
                     <div class="date" id="date"></div>
+                    <div class="time" id="time"></div>
                 </div>
                 <img src="/static/logo.png" alt="لوگو">
             </div>
@@ -250,7 +272,7 @@
                     <td>{{ contact['department'] if contact['department'] else '-' }}</td>
                     <td>{{ contact['location'] if contact['location'] else '-' }}</td>
                     <td>
-                        <a href="{{ url_for('edit', id=contact['id']) }}" class="button">ویرایش</a>
+                        <a href="{{ url_for('edit', id=contact['id']) }}" class="button-edit">ویرایش</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -285,14 +307,12 @@
                 var now = new Date();
                 var hours = now.getHours();
                 var minutes = now.getMinutes();
-                var seconds = now.getSeconds();
 
                 // افزودن صفر قبل از اعداد کمتر از 10
                 hours = (hours < 10) ? '0' + hours : hours;
                 minutes = (minutes < 10) ? '0' + minutes : minutes;
-                seconds = (seconds < 10) ? '0' + seconds : seconds;
 
-                var timeString = hours + ':' + minutes + ':' + seconds;
+                var timeString = hours + ':' + minutes;
                 document.getElementById('time').textContent = timeString;
 
                 // تبدیل تاریخ به شمسی
@@ -312,8 +332,8 @@
                 document.getElementById('date').textContent = dateString;
             }
 
-            // به‌روزرسانی ساعت هر ثانیه
-            setInterval(updateClock, 1000);
+            // به‌روزرسانی ساعت هر دقیقه
+            setInterval(updateClock, 60000);
             // به‌روزرسانی اولیه
             updateClock();
 
