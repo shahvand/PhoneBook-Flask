@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.9
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: always
+
+  phonebook:
+    build: .
+    container_name: phonebook
+    volumes:
+      - db_data:/app/database.db
+      - announcement_data:/app/announcement.json
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phonebook.rule=Host(`phonebook`)"
+      - "traefik.http.routers.phonebook.entrypoints=web"
+      - "traefik.http.services.phonebook.loadbalancer.server.port=5000"
+    environment:
+      - SECRET_KEY=your_secret_key
+    restart: always
+
+volumes:
+  db_data:
+  announcement_data:

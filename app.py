@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from flask_wtf import CSRFProtect  # اضافه کردن این خط
+from flask_wtf import CSRFProtect
 import sqlite3
 import bleach
+import json
+from bleach.css_sanitizer import CSSSanitizer
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # حتماً یک کلید مخفی قوی جایگزین کنید
@@ -14,22 +16,22 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row  # برای دسترسی به ستون‌ها با نام
     return conn
 
-# تابع برای دریافت متن اطلاعیه
-def get_announcement_text():
+# تابع برای دریافت داده‌های اطلاعیه
+def get_announcement_data():
     try:
-        with open('announcement.txt', 'r', encoding='utf-8') as f:
-            return f.read()
-    except FileNotFoundError:
-        return ''  # در صورت عدم وجود فایل، متن خالی برمی‌گرداند
+        with open('announcement.json', 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+            return {'text': '', 'hidden': False}  # مقدار پیش‌فرض
 
-# تابع برای تنظیم متن اطلاعیه
-def set_announcement_text(text):
-    with open('announcement.txt', 'w', encoding='utf-8') as f:
-        f.write(text)
+# تابع برای تنظیم داده‌های اطلاعیه
+def set_announcement_data(data):
+    with open('announcement.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 # تابع برای بررسی مجوز ویرایش بر اساس آی‌پی کاربر
 def user_can_edit():
-    allowed_ips = ['192.168.202.12', '192.168.202.3']
+    allowed_ips = ['192.168.202.12', '192.168.202.3','127.0.0.1']
     user_ip = request.remote_addr
     return user_ip in allowed_ips
 
@@ -39,9 +41,9 @@ def index():
     conn = get_db_connection()
     contacts = conn.execute('SELECT * FROM contacts ORDER BY CAST(phone AS INTEGER) ASC').fetchall()
     conn.close()
-    announcement_text = get_announcement_text()
+    announcement_data = get_announcement_data()
     can_edit = user_can_edit()
-    return render_template('index.html', contacts=contacts, announcement_text=announcement_text, user_can_edit=can_edit)
+    return render_template('index.html', contacts=contacts, announcement_data=announcement_data, user_can_edit=can_edit)
 
 # ویرایش مخاطب
 @app.route('/edit/<int:id>', methods=('GET', 'POST'))
@@ -84,14 +86,15 @@ def update_announcement():
         return jsonify({'success': False}), 403
     data = request.get_json()
     new_text = data.get('announcement_text', '')
+    hidden = data.get('hidden', False)
 
     # پاکسازی محتوای HTML
     allowed_tags = [
         'p', 'b', 'i', 'u', 'strong', 'em', 'a', 'img', 'ul', 'ol', 'li', 'br',
-        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'div', 'table', 'tr', 'td', 'th'
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'div', 'table', 'tr', 'td', 'th', 'blockquote'
     ]
     allowed_attributes = {
-        '*': ['style', 'class'],
+        '*': ['style', 'class', 'align', 'dir'],
         'a': ['href', 'title', 'target', 'rel'],
         'img': ['src', 'alt', 'title', 'width', 'height', 'style'],
         'span': ['style', 'class'],
@@ -103,16 +106,22 @@ def update_announcement():
     }
     allowed_styles = ['text-align', 'color', 'background-color', 'font-size', 'height', 'width', 'border']
 
+    # ایجاد نمونه‌ای از CSSSanitizer
+    css_sanitizer = CSSSanitizer(allowed_css_properties=allowed_styles)
+
+    # پاکسازی متن ورودی
     cleaned_text = bleach.clean(
         new_text,
         tags=allowed_tags,
         attributes=allowed_attributes,
-        styles=allowed_styles,
+        css_sanitizer=css_sanitizer,
         strip=True,
         strip_comments=True
     )
 
-    set_announcement_text(cleaned_text)
+    # ذخیره متن و وضعیت مخفی بودن
+    announcement_data = {'text': cleaned_text, 'hidden': hidden}
+    set_announcement_data(announcement_data)
     return jsonify({'success': True})
 
 # نمایش لاگ‌ها

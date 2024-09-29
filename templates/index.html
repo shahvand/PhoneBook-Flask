@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- افزودن متا تگ CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- لینک به CKEditor 5 -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
     <style>
         @font-face {
             font-family: 'Vazirmatn';
@@ -83,16 +85,16 @@
         }
         .clock {
             display: flex;
-            align-items: center; /* ساعت و تاریخ در یک خط */
+            align-items: center;
             color: #757575;
             font-family: 'Vazirmatn', sans-serif;
             margin-left: 16px;
         }
         .clock .date, .clock .time {
-            font-size: 18px; /* بزرگ‌تر کردن اندازه فونت */
+            font-size: 18px;
         }
         .clock .time {
-            margin-right: 16px; /* فاصله بین ساعت و تاریخ */
+            margin-right: 16px;
         }
         #search {
             width: 100%;
@@ -180,23 +182,33 @@
             background-color: #ffffff;
             color: #333333;
             padding: 20px;
-            margin-bottom: 30px;
+            margin: 40px auto;
             border: 1px solid #dddddd;
             border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
             position: relative;
             font-family: 'Vazirmatn', sans-serif;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center; /* مرکزچین کردن متن */
+            direction: rtl; /* رعایت جهت راست به چپ */
         }
         .announcement h2 {
             margin-top: 0;
             margin-bottom: 16px;
             color: #007bff;
             font-size: 24px;
+            text-align: center;
         }
         .announcement button {
             position: absolute;
             top: 20px;
             left: 20px;
+        }
+        /* تنظیم استایل متن داخل announcement-text */
+        #announcement-text {
+            text-align: center;
+            direction: rtl;
         }
         /* استایل مودال */
         .modal {
@@ -215,8 +227,9 @@
             background-color: #fefefe;
             margin: auto;
             padding: 20px;
-            border: 1px solid #888;
+            border: none;
             width: 80%;
+            max-width: 600px;
             border-radius: 8px;
         }
         /* واکنش‌گرایی */
@@ -294,18 +307,35 @@
         </header>
 
         <!-- بخش اطلاعیه -->
+        {% if not announcement_data.hidden %}
         <div class="announcement">
             <h2>اطلاعیه</h2>
-            <div id="announcement-text">{{ announcement_text|safe }}</div>
+            <div id="announcement-text">{{ announcement_data.text|safe }}</div>
             {% if user_can_edit %}
             <button id="edit-announcement-button">ویرایش</button>
             {% endif %}
         </div>
+        {% else %}
+            {% if user_can_edit %}
+            <!-- اگر اطلاعیه مخفی است، اما کاربر مجوز ویرایش دارد، دکمه ویرایش نمایش داده شود -->
+            <div class="announcement">
+                <h2>اطلاعیه</h2>
+                <div id="announcement-text" style="display: none;"></div>
+                <button id="edit-announcement-button">ویرایش</button>
+            </div>
+            {% endif %}
+        {% endif %}
 
         <!-- مودال ویرایش اطلاعیه -->
         <div id="announcement-modal" class="modal">
             <div class="modal-content">
-                <textarea id="announcement-editor">{{ announcement_text }}</textarea>
+                <textarea id="announcement-editor">{{ announcement_data.text }}</textarea>
+                <div>
+                    <label>
+                        <input type="checkbox" id="hidden-checkbox" {% if announcement_data.hidden %}checked{% endif %}>
+                        مخفی کردن اطلاعیه برای همه
+                    </label>
+                </div>
                 <button id="save-announcement-button">ذخیره</button>
                 <button id="cancel-announcement-button">انصراف</button>
             </div>
@@ -343,7 +373,6 @@
         </table>
 
         <!-- اسکریپت‌ها -->
-        <script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
         <script>
             // دریافت CSRF Token از متا تگ
             var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -466,22 +495,32 @@
                 sortTable(1);
             };
 
-            // اسکریپت برای ویرایش اطلاعیه
+            // اسکریپت برای ویرایش اطلاعیه با CKEditor 5
             document.addEventListener('DOMContentLoaded', function() {
                 var editButton = document.getElementById('edit-announcement-button');
                 var modal = document.getElementById('announcement-modal');
                 var saveButton = document.getElementById('save-announcement-button');
                 var cancelButton = document.getElementById('cancel-announcement-button');
                 var announcementTextDiv = document.getElementById('announcement-text');
+                var hiddenCheckbox = document.getElementById('hidden-checkbox');
                 var editor;
 
                 if (editButton) {
                     editButton.addEventListener('click', function() {
                         modal.style.display = 'block';
                         if (!editor) {
-                            editor = CKEDITOR.replace('announcement-editor', {
-                                entities: false, // غیرفعال کردن تبدیل موجودیت‌های HTML
-                                basicEntities: false
+                            ClassicEditor.create(document.querySelector('#announcement-editor'), {
+                                language: 'fa',
+                                toolbar: ['undo', 'redo', '|', 'bold', 'italic', 'underline', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'alignment']
+                            }).then(newEditor => {
+                                editor = newEditor;
+                                // تنظیم جهت و تراز متن به صورت پیش‌فرض
+                                editor.editing.view.change(writer => {
+                                    writer.setAttribute('dir', 'rtl', editor.editing.view.document.getRoot());
+                                    writer.setAttribute('style', 'text-align: center;', editor.editing.view.document.getRoot());
+                                });
+                            }).catch(error => {
+                                console.error(error);
                             });
                         }
                     });
@@ -489,21 +528,29 @@
 
                 saveButton.addEventListener('click', function() {
                     var newText = editor.getData();
+                    var hidden = hiddenCheckbox.checked;
                     fetch('/update-announcement', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRFToken': csrfToken
                         },
-                        body: JSON.stringify({ announcement_text: newText })
+                        body: JSON.stringify({ announcement_text: newText, hidden: hidden })
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
                             announcementTextDiv.innerHTML = newText;
+                            if (hidden) {
+                                announcementTextDiv.parentElement.style.display = 'none';
+                            } else {
+                                announcementTextDiv.parentElement.style.display = 'block';
+                            }
                             modal.style.display = 'none';
                             editor.destroy();
                             editor = null;
+                            // به‌روزرسانی وضعیت چک‌باکس
+                            hiddenCheckbox.checked = hidden;
                         } else {
                             alert('خطا در به‌روزرسانی اطلاعیه.');
                         }
