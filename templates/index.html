@@ -5,6 +5,8 @@
     <title>شبکه آفتاب</title>
     <!-- آیکون‌های Material Design -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- افزودن متا تگ CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
         @font-face {
             font-family: 'Vazirmatn';
@@ -173,6 +175,50 @@
         a.button-edit:hover {
             background-color: #e0e0e0;
         }
+        /* استایل بخش اطلاعیه */
+        .announcement {
+            background-color: #ffffff;
+            color: #333333;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid #dddddd;
+            border-radius: 8px;
+            position: relative;
+            font-family: 'Vazirmatn', sans-serif;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .announcement h2 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: #007bff;
+            font-size: 24px;
+        }
+        .announcement button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+        /* استایل مودال */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            padding-top: 100px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 8px;
+        }
         /* واکنش‌گرایی */
         @media (max-width: 768px) {
             .main-content {
@@ -206,45 +252,32 @@
 <body>
     <!-- نوار کناری -->
     <div class="sidebar">
-        <!-- لینک به صفحه حضور و غیاب -->
+        <!-- لینک‌ها -->
         <a href="https://time.aftabnetad.com/" title="حضور و غیاب">
             <i class="material-icons">schedule</i>
             حضور و غیاب
         </a>
-
-        <!-- لینک به صفحه اتوماسیون اداری -->
         <a href="https://ato.aftabnetad.com/" title="اتوماسیون اداری">
             <i class="material-icons">work</i>
             اتوماسیون اداری
         </a>
-
-        <!-- لینک به صفحه ایمیل تحت وب -->
         <a href="https://mail.aftabnetad.com/" title="ایمیل تحت وب">
             <i class="material-icons">email</i>
             ایمیل تحت وب
         </a>
-
-        <!-- لینک به صفحه هلپ -->
         <a href="http://help.aftabnetad.com" title="هلپ">
             <i class="material-icons">help_outline</i>
             هلپ
         </a>
-
-        <!-- لینک به صفحه اخبار -->
         <a href="http://news.aftabnetad.com/" title="اخبار">
             <i class="material-icons">announcement</i>
             اخبار
         </a>
-
-        <!-- لینک به صفحه فایل شیرینگ -->
         <a href="https://acloud.aftabnetad.com/" title="فایل شیرینگ">
             <i class="material-icons">folder_shared</i>
             فایل شیرینگ
         </a>
-
-   
     </div>
-</body>
 
     <!-- محتوای اصلی -->
     <div class="main-content">
@@ -260,7 +293,28 @@
             </div>
         </header>
 
+        <!-- بخش اطلاعیه -->
+        <div class="announcement">
+            <h2>اطلاعیه</h2>
+            <div id="announcement-text">{{ announcement_text|safe }}</div>
+            {% if user_can_edit %}
+            <button id="edit-announcement-button">ویرایش</button>
+            {% endif %}
+        </div>
+
+        <!-- مودال ویرایش اطلاعیه -->
+        <div id="announcement-modal" class="modal">
+            <div class="modal-content">
+                <textarea id="announcement-editor">{{ announcement_text }}</textarea>
+                <button id="save-announcement-button">ذخیره</button>
+                <button id="cancel-announcement-button">انصراف</button>
+            </div>
+        </div>
+
+        <!-- فیلد جستجو -->
         <input type="text" id="search" placeholder="جستجو...">
+
+        <!-- جدول مخاطبین -->
         <table id="contactsTable">
             <thead>
                 <tr>
@@ -289,8 +343,12 @@
         </table>
 
         <!-- اسکریپت‌ها -->
+        <script src="https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js"></script>
         <script>
-            // توابع تبدیل تاریخ میلادی به شمسی
+            // دریافت CSRF Token از متا تگ
+            var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            // تابع تبدیل تاریخ میلادی به شمسی
             function gregorian_to_jalali(gy, gm, gd) {
                 var g_d_m = [0,31,59,90,120,151,181,212,243,273,304,334];
                 var jy = (gy <= 1600) ? 0 : 979;
@@ -407,6 +465,69 @@
             window.onload = function() {
                 sortTable(1);
             };
+
+            // اسکریپت برای ویرایش اطلاعیه
+            document.addEventListener('DOMContentLoaded', function() {
+                var editButton = document.getElementById('edit-announcement-button');
+                var modal = document.getElementById('announcement-modal');
+                var saveButton = document.getElementById('save-announcement-button');
+                var cancelButton = document.getElementById('cancel-announcement-button');
+                var announcementTextDiv = document.getElementById('announcement-text');
+                var editor;
+
+                if (editButton) {
+                    editButton.addEventListener('click', function() {
+                        modal.style.display = 'block';
+                        if (!editor) {
+                            editor = CKEDITOR.replace('announcement-editor', {
+                                entities: false, // غیرفعال کردن تبدیل موجودیت‌های HTML
+                                basicEntities: false
+                            });
+                        }
+                    });
+                }
+
+                saveButton.addEventListener('click', function() {
+                    var newText = editor.getData();
+                    fetch('/update-announcement', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrfToken
+                        },
+                        body: JSON.stringify({ announcement_text: newText })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            announcementTextDiv.innerHTML = newText;
+                            modal.style.display = 'none';
+                            editor.destroy();
+                            editor = null;
+                        } else {
+                            alert('خطا در به‌روزرسانی اطلاعیه.');
+                        }
+                    });
+                });
+
+                cancelButton.addEventListener('click', function() {
+                    modal.style.display = 'none';
+                    if (editor) {
+                        editor.destroy();
+                        editor = null;
+                    }
+                });
+
+                window.addEventListener('click', function(event) {
+                    if (event.target == modal) {
+                        modal.style.display = 'none';
+                        if (editor) {
+                            editor.destroy();
+                            editor = null;
+                        }
+                    }
+                });
+            });
         </script>
     </div>
 </body>

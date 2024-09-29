@@ -1,0 +1,15 @@
+.announcement {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 16px;
+    margin-bottom: 20px;
+    border: 1px solid #ffeeba;
+    border-radius: 4px;
+    position: relative;
+}
+
+.announcement button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
