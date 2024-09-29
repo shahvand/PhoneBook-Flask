@@ -4,29 +4,33 @@ import sqlite3
 import bleach
 import json
 from bleach.css_sanitizer import CSSSanitizer
+import os
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # حتماً یک کلید مخفی قوی جایگزین کنید
 
 csrf = CSRFProtect(app)  # فعال کردن CSRF Protection
+DATA_DIR = '/app/data'  # یا می‌توانید از os.environ استفاده کنید
 
 # تابع برای اتصال به دیتابیس
 def get_db_connection():
-    conn = sqlite3.connect('database.db')
+    db_path = os.path.join(DATA_DIR, 'database.db')
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row  # برای دسترسی به ستون‌ها با نام
     return conn
 
 # تابع برای دریافت داده‌های اطلاعیه
 def get_announcement_data():
+    announcement_path = os.path.join(DATA_DIR, 'announcement.json')
     try:
-        with open('announcement.json', 'r', encoding='utf-8') as f:
+        with open(announcement_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-            return {'text': '', 'hidden': False}  # مقدار پیش‌فرض
+        return {'text': '', 'hidden': False}
 
-# تابع برای تنظیم داده‌های اطلاعیه
 def set_announcement_data(data):
-    with open('announcement.json', 'w', encoding='utf-8') as f:
+    announcement_path = os.path.join(DATA_DIR, 'announcement.json')
+    with open(announcement_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
 # تابع برای بررسی مجوز ویرایش بر اساس آی‌پی کاربر
