@@ -1,4 +1,0 @@
-Flask
-Flask-WTF
-bleach
-tinycss2
