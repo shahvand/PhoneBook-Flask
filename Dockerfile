@@ -19,7 +19,7 @@ RUN pip install -r requirements.txt
 COPY . /app/
 
 # باز کردن پورت ۵۰۰۰ برای برنامه Flask
-EXPOSE 5000
+EXPOSE 80
 
 # فرمان اجرا برای شروع برنامه
 CMD ["python", "app.py"]

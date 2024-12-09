@@ -1,0 +1,6 @@
+Flask>=2.0.0
+Flask-WTF>=1.0.0
+bleach
+tinycss2
+gunicorn
+Werkzeug>=2.0.0

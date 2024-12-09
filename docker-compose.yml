@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   traefik:
     image: traefik:v2.9
@@ -7,23 +9,33 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
+      - "--providers.docker.network=traefik_network"
     ports:
       - "80:80"
       - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik_network
     restart: always
 
   phonebook:
     build: .
     container_name: phonebook
     volumes:
-      - ./data:/app/data  # اتصال دایرکتوری میزبان به کانتینر
+      - ./data:/app/data
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.phonebook.rule=Host(`phonebook`)"
-      - "traefik.http.routers.phonebook.entrypoints=web"
-      - "traefik.http.services.phonebook.loadbalancer.server.port=5000"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.phonebook.rule=Host("phonebook.aftabnetad.com")'
+      - 'traefik.http.routers.phonebook.entrypoints=web'
+      - 'traefik.http.services.phonebook.loadbalancer.server.port=80'
+      - 'traefik.docker.network=traefik_network'
     environment:
       - SECRET_KEY=your_secret_key
+    networks:
+      - traefik_network
     restart: always
+
+networks:
+  traefik_network:
+    driver: bridge

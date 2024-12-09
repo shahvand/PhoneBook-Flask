@@ -16,249 +16,242 @@
             font-weight: normal;
             font-style: normal;
         }
+
+        :root {
+            --primary-color: #3B82F6;          /* آبی مدرن */
+            --secondary-color: #60A5FA;        /* آبی روشن */
+            --dark-color: #1E293B;            /* خاکستری تیره */
+            --background-color: #F1F5F9;       /* خاکستری روشن پس‌زمینه */
+            --text-color: #334155;            /* خاکستری متن */
+            --border-color: #E2E8F0;          /* خاکستری مرز */
+            --hover-color: #EFF6FF;           /* آبی بسیار روشن */
+            --white: #FFFFFF;                 /* سفید */
+        }
+
         body {
             font-family: 'Vazirmatn', sans-serif;
-            background-color: #f5f5f5;
+            background-color: var(--background-color);
             margin: 0;
             padding: 0;
             direction: rtl;
+            color: var(--text-color);
         }
+
         /* نوار کناری مدرن */
         .sidebar {
             position: fixed;
             right: 0;
             top: 0;
-            width: 220px;
+            width: 240px;
             height: 100%;
-            background-color: #ffffff;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            background: var(--dark-color);
+            box-shadow: 4px 0 10px rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
-            padding-top: 20px;
-            border-left: 1px solid #e0e0e0;
+            padding-top: 30px;
         }
+
         .sidebar a {
-            color: #424242;
+            color: var(--white);
             text-decoration: none;
-            padding: 15px 20px;
+            padding: 15px 25px;
             font-size: 16px;
             display: flex;
             align-items: center;
-            transition: background-color 0.2s;
-            font-family: 'Vazirmatn', sans-serif;
+            transition: all 0.3s ease;
+            border-right: 3px solid transparent;
         }
+
         .sidebar a:hover {
-            background-color: #eeeeee;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-right-color: var(--primary-color);
+            padding-right: 30px;
         }
+
         .sidebar i {
             font-size: 24px;
             margin-left: 15px;
         }
+
         .main-content {
-            margin-right: 220px;
-            padding: 20px;
-            background-color: #f5f5f5;
+            margin-right: 240px;
+            padding: 30px;
             min-height: 100vh;
         }
+
+        /* هدر جدید */
         header {
-            background-color: #ffffff;
-            padding: 16px 24px;
+            background: var(--white);
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+            margin-bottom: 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
         header h1 {
             margin: 0;
-            color: #212121;
-            font-size: 24px;
-            font-weight: normal;
+            color: var(--dark-color);
+            font-size: 28px;
+            font-weight: bold;
         }
-        header img {
-            height: 40px;
-            margin-left: 16px;
-        }
-        /* استایل ساعت دیجیتال */
+
         .clock-logo-container {
             display: flex;
             align-items: center;
+            gap: 30px;
+            width: 100%;
+            justify-content: space-between;
         }
+
         .clock {
+            margin: 0 auto;
+            background: var(--background-color);
+            padding: 12px 25px;
+            border-radius: 12px;
             display: flex;
-            align-items: center;
-            color: #757575;
-            font-family: 'Vazirmatn', sans-serif;
-            margin-left: 16px;
-        }
-        .clock .date, .clock .time {
+            gap: 25px;
             font-size: 18px;
+            color: var(--text-color);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
         }
-        .clock .time {
-            margin-right: 16px;
+
+        .clock .date, .clock .time {
+            font-weight: 500;
         }
+
+        /* جستجو */
         #search {
             width: 100%;
-            padding: 12px 16px;
-            margin: 24px 0;
-            box-sizing: border-box;
-            border: none;
-            border-radius: 4px;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             font-size: 16px;
-            background-color: #ffffff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            font-family: 'Vazirmatn', sans-serif;
+            background-color: var(--white);
+            transition: all 0.3s ease;
         }
+
+        #search:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* جدول */
         table {
             width: 100%;
-            border-collapse: collapse;
-            background-color: #ffffff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border-radius: 4px;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: var(--white);
+            border-radius: 15px;
             overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
         }
-        th, td {
-            padding: 8px 16px;
-            text-align: center;
-            font-size: 16px;
-            font-family: 'Vazirmatn', sans-serif;
-        }
+
         th {
-            background-color: #f5f5f5;
-            color: #757575;
-            cursor: pointer;
-            user-select: none;
+            background-color: var(--dark-color);
+            color: var(--white);
+            padding: 15px;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.3s ease;
         }
+
         th.sortable:hover {
-            background-color: #eeeeee;
-        }
-        tr {
-            border-bottom: 1px solid #e0e0e0;
-        }
-        tr:last-child {
-            border-bottom: none;
-        }
-        /* بولد کردن متن ستون 'نام و نام خانوادگی' */
-        td:first-child {
-            font-weight: bold;
-        }
-        /* استایل دکمه‌های عمومی */
-        a.button, button {
-            padding: 10px 16px;
-            margin: 0;
-            text-decoration: none;
-            color: #424242;
-            background-color: #eeeeee;
-            border: none;
+            background-color: var(--text-color);
             cursor: pointer;
+        }
+
+        td {
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            color: var(--text-color);
+        }
+
+        tr:hover td {
+            background-color: var(--hover-color);
+        }
+
+        /* دکمه ویرایش */
+        .button-edit {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding: 8px 16px;
             border-radius: 8px;
-            font-size: 14px;
-            transition: background-color 0.2s;
-            font-family: 'Vazirmatn', sans-serif;
-            display: inline-block;
-        }
-        a.button:hover, button:hover {
-            background-color: #e0e0e0;
-        }
-        /* استایل جدید برای دکمه "ویرایش" */
-        a.button-edit {
-            padding: 10px 16px;
-            margin: 0;
             text-decoration: none;
-            color: #424242;
-            background-color: #eeeeee;
-            border: none;
-            cursor: pointer;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: background-color 0.2s;
-            font-family: 'Vazirmatn', sans-serif;
-            display: inline-block;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
         }
-        a.button-edit:hover {
-            background-color: #e0e0e0;
+
+        .button-edit:hover {
+            background-color: var(--white);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
         }
-        /* استایل بخش اطلاعیه */
-        .announcement {
-            background-color: #ffffff;
-            color: #333333;
-            padding: 20px;
-            margin: 40px auto;
-            border: 1px solid #dddddd;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 800px;
-            position: relative;
-            font-family: 'Vazirmatn', sans-serif;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            text-align: center; /* مرکزچین کردن متن */
-            direction: rtl; /* رعایت جهت راست به چپ */
+
+        /* تغییر رنگ ردیف جدول در حالت hover */
+        tr:hover .button-edit {
+            background-color: var(--white);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
         }
-        .announcement h2 {
-            margin-top: 0;
-            margin-bottom: 16px;
-            color: #007bff;
-            font-size: 24px;
-            text-align: center;
-        }
-        .announcement button {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-        }
-        /* تنظیم استایل متن داخل announcement-text */
-        #announcement-text {
-            text-align: center;
-            direction: rtl;
-        }
-        /* استایل مودال */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            padding-top: 100px;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.5);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: none;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 8px;
-        }
+
         /* واکنش‌گرایی */
         @media (max-width: 768px) {
-            .main-content {
-                margin-right: 0;
-            }
             .sidebar {
                 width: 100%;
                 height: auto;
                 position: relative;
-                flex-direction: row;
-                justify-content: space-around;
-                box-shadow: none;
-                border-left: none;
-                border-bottom: 1px solid #e0e0e0;
+                padding: 10px;
             }
+
+            .sidebar a {
+                padding: 10px 15px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .main-content {
+                margin-right: 0;
+                padding: 15px;
+            }
+
             header {
                 flex-direction: column;
-                align-items: flex-start;
+                gap: 15px;
             }
+
             .clock-logo-container {
-                margin-top: 10px;
-                align-items: flex-start;
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
             }
+
+            header img {
+                order: -1;
+            }
+
             .clock {
-                margin-left: 0;
-                justify-content: flex-start;
+                margin: 0;
+                font-size: 16px;
+                padding: 10px 20px;
+                gap: 15px;
             }
+        }
+
+        header img {
+            height: 50px;
+            width: auto;
+            order: 2;
         }
     </style>
 </head>
@@ -292,54 +285,18 @@
         </a>
     </div>
 
-    <!-- محتوای اصلی -->
+    <!-- محوای اصلی -->
     <div class="main-content">
         <!-- هدر با ساعت دیجیتال و لوگو در کنار هم -->
         <header>
-            <h1>شبکه آفتاب</h1>
             <div class="clock-logo-container">
+                <img src="/static/logo.png" alt="لوگو">
                 <div class="clock">
                     <div class="date" id="date"></div>
                     <div class="time" id="time"></div>
                 </div>
-                <img src="/static/logo.png" alt="لوگو">
             </div>
         </header>
-
-        <!-- بخش اطلاعیه -->
-        {% if not announcement_data.hidden %}
-        <div class="announcement">
-            <h2>اطلاعیه</h2>
-            <div id="announcement-text">{{ announcement_data.text|safe }}</div>
-            {% if user_can_edit %}
-            <button id="edit-announcement-button">ویرایش</button>
-            {% endif %}
-        </div>
-        {% else %}
-            {% if user_can_edit %}
-            <!-- اگر اطلاعیه مخفی است، اما کاربر مجوز ویرایش دارد، دکمه ویرایش نمایش داده شود -->
-            <div class="announcement">
-                <h2>اطلاعیه</h2>
-                <div id="announcement-text" style="display: none;"></div>
-                <button id="edit-announcement-button">ویرایش</button>
-            </div>
-            {% endif %}
-        {% endif %}
-
-        <!-- مودال ویرایش اطلاعیه -->
-        <div id="announcement-modal" class="modal">
-            <div class="modal-content">
-                <textarea id="announcement-editor">{{ announcement_data.text }}</textarea>
-                <div>
-                    <label>
-                        <input type="checkbox" id="hidden-checkbox" {% if announcement_data.hidden %}checked{% endif %}>
-                        مخفی کردن اطلاعیه برای همه
-                    </label>
-                </div>
-                <button id="save-announcement-button">ذخیره</button>
-                <button id="cancel-announcement-button">انصراف</button>
-            </div>
-        </div>
 
         <!-- فیلد جستجو -->
         <input type="text" id="search" placeholder="جستجو...">
