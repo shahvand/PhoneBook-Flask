@@ -135,6 +135,7 @@
     <div class="main-content">
         <h1>ویرایش مخاطب</h1>
         <form method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <label>نام و نام خانوادگی:</label>
             <input type="text" name="full_name" value="{{ contact['full_name'] }}" required>
 

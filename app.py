@@ -4,9 +4,11 @@ import sqlite3
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # حتماً یک کلید مخفی قوی جایگزین کنید
+app.secret_key = 'your_secret_مهعامهعغهعلعنkey'  # حتماً یک کلید مخفی قوی جایگزین کنید
 
-csrf = CSRFProtect(app)  # فعال کردن CSRF Protection
+# فعال کردن CSRF Protection
+csrf = CSRFProtect(app)
+
 DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
 
 # اطمینان از وجود پوشه data
