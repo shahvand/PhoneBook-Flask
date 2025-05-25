@@ -1,5 +1,5 @@
-# استفاده از تصویر پایه پایتون ۳.۹ نسخه سبک (slim)
-FROM python:3.9-slim
+# استفاده از تصویر پایه پایتون ۳.۱۱ نسخه سبک (slim)
+FROM python:3.11-slim
 
 # تنظیم متغیرهای محیطی
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -8,18 +8,23 @@ ENV PYTHONUNBUFFERED=1
 # تنظیم دایرکتوری کاری در داخل کانتینر
 WORKDIR /app
 
-# کپی کردن فایل‌های مورد نیاز
-COPY requirements.txt /app/
+# کپی فایل‌های requirements
+COPY requirements.txt .
 
-# به‌روزرسانی pip و نصب وابستگی‌ها
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+# نصب وابستگی‌ها
+RUN pip install --no-cache-dir -r requirements.txt
 
-# کپی کردن کدهای برنامه به داخل کانتینر
-COPY . /app/
+# کپی کد برنامه
+COPY . .
+
+# ایجاد دایرکتوری static اگر وجود نداشته باشد
+RUN mkdir -p static
+
+# تنظیم مجوزها
+RUN chmod +x app.py
 
 # باز کردن پورت ۵۰۰۰ برای برنامه Flask
-EXPOSE 80
+EXPOSE 5000
 
 # فرمان اجرا برای شروع برنامه
 CMD ["python", "app.py"]

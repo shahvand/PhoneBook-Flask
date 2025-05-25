@@ -43,14 +43,36 @@ def get_user_info():
     # دریافت نام کامپیوتر واقعی
     computer_name = ''
     try:
-        # استفاده از socket برای دریافت نام کامپیوتر سرور
-        computer_name = socket.gethostname()
+        # در محیط Docker، سعی کن نام هاست واقعی رو بگیری
+        if 'X-Forwarded-For' in request.headers:
+            # اگر از پروکسی یا load balancer استفاده می‌شه
+            real_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+            user_ip = real_ip
         
-        # اگر نام کامپیوتر خالی بود، سعی کن از متغیرهای محیطی استفاده کنی
+        # دریافت نام کامپیوتر از متغیرهای محیطی
+        computer_name = os.environ.get('COMPUTERNAME', '')
         if not computer_name:
-            computer_name = os.environ.get('COMPUTERNAME', os.environ.get('HOSTNAME', 'نامشخص'))
-    except:
-        computer_name = 'نامشخص'
+            computer_name = os.environ.get('HOSTNAME', '')
+        
+        # اگر هنوز نام کامپیوتر نداریم، از socket استفاده کن
+        if not computer_name:
+            computer_name = socket.gethostname()
+        
+        # اگر نام کامپیوتر شبیه container ID هست، سعی کن نام بهتری پیدا کنی
+        if computer_name and (len(computer_name) == 12 or computer_name.startswith('phonebook')):
+            # در محیط Docker، نام کامپیوتر معمولاً نام سرویس یا container ID هست
+            if computer_name.startswith('phonebook'):
+                computer_name = 'Docker-PhoneBook'
+            else:
+                computer_name = f'Docker-{computer_name[:8]}'
+        
+        # اگر هیچ نام معقولی پیدا نکردیم
+        if not computer_name or computer_name == 'localhost':
+            computer_name = f'سیستم-{user_ip.replace(".", "-")}'
+            
+    except Exception as e:
+        print(f"خطا در دریافت اطلاعات کاربر: {e}")
+        computer_name = f'نامشخص-{user_ip.replace(".", "-")}'
     
     return {
         'ip_address': user_ip,
@@ -190,8 +212,21 @@ init_database()
 
 # تابع برای بررسی مجوز ویرایش بر اساس آی‌پی کاربر
 def user_can_edit():
-    allowed_ips = ['192.168.202.12', '192.168.202.3','127.0.0.1']
+    # آی‌پی‌های مجاز شامل محیط Docker
+    allowed_ips = [
+        '192.168.202.12', 
+        '192.168.202.3',
+        '127.0.0.1',
+        '192.168.100.26',  # آی‌پی هاست Docker
+        '172.21.0.3',      # آی‌پی داخلی Docker
+        '::1'              # IPv6 localhost
+    ]
     user_ip = request.remote_addr
+    
+    # بررسی آی‌پی‌های شبکه Docker (172.x.x.x)
+    if user_ip.startswith('172.') or user_ip.startswith('192.168.'):
+        return True
+    
     return user_ip in allowed_ips
 
 # تابع برای دریافت آیتم‌های منو
@@ -481,4 +516,6 @@ def add():
     return "افزودن مخاطب جدید غیرفعال است.", 403
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    # تنظیمات برای محیط تولید
+    debug_mode = os.getenv('FLASK_ENV', 'development') == 'development'
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)

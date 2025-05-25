@@ -21,21 +21,23 @@ services:
 
   phonebook:
     build: .
-    container_name: phonebook
-    volumes:
-      - ./data:/app/data
-    labels:
-      - 'traefik.enable=true'
-      - 'traefik.http.routers.phonebook.rule=Host("phonebook.aftabnetad.com")'
-      - 'traefik.http.routers.phonebook.entrypoints=web'
-      - 'traefik.http.services.phonebook.loadbalancer.server.port=80'
-      - 'traefik.docker.network=traefik_network'
+    container_name: phonebook-app
+    ports:
+      - "5000:5000"
     environment:
-      - SECRET_KEY=your_secret_key
+      - DB_HOST=192.168.100.26
+      - DB_USER=root
+      - DB_PASSWORD=Qpz1zX1
+      - DB_NAME=phone_book
+      - FLASK_ENV=production
+    volumes:
+      - ./static:/app/static
+    restart: unless-stopped
     networks:
-      - traefik_network
-    restart: always
+      - phonebook-network
 
 networks:
   traefik_network:
+    driver: bridge
+  phonebook-network:
     driver: bridge
