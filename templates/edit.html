@@ -136,6 +136,8 @@
         <h1>ویرایش مخاطب</h1>
         <form method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="computer_name" id="computer_name" value="">
+            
             <label>نام و نام خانوادگی:</label>
             <input type="text" name="full_name" value="{{ contact['full_name'] }}" required>
 
@@ -155,5 +157,87 @@
         </form>
         <a href="{{ url_for('index') }}" class="back-link">بازگشت به لیست مخاطبین</a>
     </div>
+
+    <script>
+        // دریافت نام کامپیوتر از سمت کلاینت
+        async function getComputerName() {
+            try {
+                let computerName = '';
+                
+                // روش 1: استفاده از WebRTC برای دریافت نام کامپیوتر
+                try {
+                    const pc = new RTCPeerConnection();
+                    pc.createDataChannel('');
+                    const offer = await pc.createOffer();
+                    await pc.setLocalDescription(offer);
+                    
+                    const lines = offer.sdp.split('\n');
+                    for (let line of lines) {
+                        if (line.includes('a=candidate')) {
+                            const parts = line.split(' ');
+                            if (parts.length > 4) {
+                                const ip = parts[4];
+                                if (ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
+                                    computerName = `PC-${ip.split('.').slice(-2).join('-')}`;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    pc.close();
+                } catch (e) {
+                    console.log('WebRTC method failed:', e);
+                }
+                
+                // روش 2: از User-Agent
+                if (!computerName) {
+                    const userAgent = navigator.userAgent;
+                    
+                    // جستجو برای نام کامپیوتر در User-Agent
+                    const patterns = [
+                        /Windows NT [^;]+; ([^;)]+)/,
+                        /Windows ([^;)]+)/
+                    ];
+                    
+                    for (let pattern of patterns) {
+                        const match = userAgent.match(pattern);
+                        if (match && match[1]) {
+                            const potential = match[1].trim();
+                            if (!['Win64', 'x64', 'WOW64', 'ARM64', 'Trident'].includes(potential)) {
+                                computerName = potential;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // روش 3: استفاده از hostname
+                if (!computerName && window.location.hostname && window.location.hostname !== 'localhost') {
+                    computerName = window.location.hostname;
+                }
+                
+                // روش 4: تولید نام بر اساس مشخصات مرورگر
+                if (!computerName) {
+                    const platform = navigator.platform || 'Unknown';
+                    const language = navigator.language || 'fa';
+                    const timestamp = Date.now().toString().slice(-4);
+                    computerName = `${platform}-${language}-${timestamp}`;
+                }
+                
+                return computerName || 'کاربر-ناشناس';
+            } catch (error) {
+                console.log('خطا در دریافت نام کامپیوتر:', error);
+                return 'کاربر-ناشناس';
+            }
+        }
+        
+        // تنظیم نام کامپیوتر در فیلد مخفی
+        document.addEventListener('DOMContentLoaded', async function() {
+            const computerNameField = document.getElementById('computer_name');
+            const computerName = await getComputerName();
+            computerNameField.value = computerName;
+            console.log('نام کامپیوتر تشخیص داده شده:', computerName);
+        });
+    </script>
 </body>
 </html>

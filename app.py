@@ -40,7 +40,7 @@ def get_user_info():
     user_ip = request.remote_addr
     user_agent = request.headers.get('User-Agent', '')
     
-    # دریافت نام کامپیوتر واقعی
+    # دریافت نام کامپیوتر واقعی کاربر
     computer_name = ''
     try:
         # در محیط Docker، سعی کن نام هاست واقعی رو بگیری
@@ -49,26 +49,39 @@ def get_user_info():
             real_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
             user_ip = real_ip
         
-        # دریافت نام کامپیوتر از متغیرهای محیطی
-        computer_name = os.environ.get('COMPUTERNAME', '')
-        if not computer_name:
-            computer_name = os.environ.get('HOSTNAME', '')
+        # استخراج نام کامپیوتر از User-Agent
+        if 'Windows' in user_agent:
+            # جستجو برای نام کامپیوتر در User-Agent
+            import re
+            # الگوهای مختلف برای استخراج نام کامپیوتر
+            patterns = [
+                r'Windows NT [^;]+; ([^;)]+)',  # Windows NT pattern
+                r'Windows ([^;)]+)',            # General Windows pattern
+            ]
+            for pattern in patterns:
+                match = re.search(pattern, user_agent)
+                if match:
+                    potential_name = match.group(1).strip()
+                    # فیلتر کردن نام‌های غیرمفید
+                    if potential_name not in ['Win64', 'x64', 'WOW64', 'ARM64']:
+                        computer_name = potential_name
+                        break
         
-        # اگر هنوز نام کامپیوتر نداریم، از socket استفاده کن
+        # اگر از User-Agent نتونستیم نام کامپیوتر رو بگیریم
         if not computer_name:
-            computer_name = socket.gethostname()
+            # بررسی header های اضافی که ممکنه نام کامپیوتر داشته باشن
+            computer_name = request.headers.get('X-Computer-Name', '')
+            if not computer_name:
+                computer_name = request.headers.get('X-Host-Name', '')
         
-        # اگر نام کامپیوتر شبیه container ID هست، سعی کن نام بهتری پیدا کنی
-        if computer_name and (len(computer_name) == 12 or computer_name.startswith('phonebook')):
-            # در محیط Docker، نام کامپیوتر معمولاً نام سرویس یا container ID هست
-            if computer_name.startswith('phonebook'):
-                computer_name = 'Docker-PhoneBook'
+        # اگر هنوز نام کامپیوتر نداریم، از آی‌پی استفاده کن
+        if not computer_name or computer_name in ['Win64', 'x64', 'WOW64', 'ARM64']:
+            # تولید نام بر اساس آی‌پی
+            ip_parts = user_ip.split('.')
+            if len(ip_parts) == 4:
+                computer_name = f'PC-{ip_parts[-2]}-{ip_parts[-1]}'
             else:
-                computer_name = f'Docker-{computer_name[:8]}'
-        
-        # اگر هیچ نام معقولی پیدا نکردیم
-        if not computer_name or computer_name == 'localhost':
-            computer_name = f'سیستم-{user_ip.replace(".", "-")}'
+                computer_name = f'کاربر-{user_ip.replace(".", "-").replace(":", "-")}'
             
     except Exception as e:
         print(f"خطا در دریافت اطلاعات کاربر: {e}")
@@ -79,6 +92,34 @@ def get_user_info():
         'user_agent': user_agent,
         'computer_name': computer_name
     }
+
+# تابع برای ثبت لاگ با نام کامپیوتر از کلاینت
+def log_action_with_computer(contact_id, action, additional_info='', client_computer_name=''):
+    # فقط لاگ ویرایش ثبت می‌شود
+    if action != 'edit':
+        return
+        
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            user_info = get_user_info()
+            
+            # استفاده از نام کامپیوتر ارسالی از کلاینت
+            computer_name = client_computer_name if client_computer_name else user_info['computer_name']
+            
+            # ثبت لاگ با اطلاعات کامل
+            cursor.execute('''
+                INSERT INTO logs (contact_id, action, ip_address, user_agent, computer_name, additional_info) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            ''', (contact_id, action, user_info['ip_address'], user_info['user_agent'], 
+                  computer_name, additional_info))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except pymysql.Error as e:
+            print(f"خطا در ثبت لاگ: {e}")
 
 # تابع برای ثبت لاگ با اطلاعات کامل - فقط برای ویرایش
 def log_action(contact_id, action, additional_info=''):
@@ -446,6 +487,7 @@ def edit(id):
             position = request.form.get('position')
             department = request.form.get('department')
             location = request.form.get('location')
+            client_computer_name = request.form.get('computer_name', '')
 
             if not phone:
                 return "فیلد شماره تلفن نمی‌تواند خالی باشد.", 400
@@ -456,8 +498,8 @@ def edit(id):
                 WHERE id = %s
             ''', (full_name, position, department, location, id))
 
-            # ثبت لاگ با اطلاعات کامل
-            log_action(id, 'edit', f'ویرایش مخاطب: {full_name}')
+            # ثبت لاگ با نام کامپیوتر از کلاینت
+            log_action_with_computer(id, 'edit', f'ویرایش مخاطب: {full_name}', client_computer_name)
             
             conn.commit()
             cursor.close()
