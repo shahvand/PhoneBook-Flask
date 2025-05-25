@@ -164,67 +164,49 @@
             try {
                 let computerName = '';
                 
-                // روش 1: استفاده از WebRTC برای دریافت نام کامپیوتر
+                // ابتدا چک کن که آیا نام کامپیوتر در localStorage ذخیره شده
+                const savedComputerName = localStorage.getItem('computer_name');
+                if (savedComputerName && savedComputerName !== 'کاربر-ناشناس') {
+                    return savedComputerName;
+                }
+                
+                // روش 1: استفاده از ActiveX برای Windows (فقط در IE/Edge legacy)
                 try {
-                    const pc = new RTCPeerConnection();
-                    pc.createDataChannel('');
-                    const offer = await pc.createOffer();
-                    await pc.setLocalDescription(offer);
-                    
-                    const lines = offer.sdp.split('\n');
-                    for (let line of lines) {
-                        if (line.includes('a=candidate')) {
-                            const parts = line.split(' ');
-                            if (parts.length > 4) {
-                                const ip = parts[4];
-                                if (ip.startsWith('192.168.') || ip.startsWith('10.') || ip.startsWith('172.')) {
-                                    computerName = `PC-${ip.split('.').slice(-2).join('-')}`;
-                                    break;
-                                }
-                            }
+                    if (window.ActiveXObject || "ActiveXObject" in window) {
+                        const network = new ActiveXObject("WScript.Network");
+                        computerName = network.ComputerName;
+                        if (computerName) {
+                            localStorage.setItem('computer_name', computerName);
+                            return computerName;
                         }
                     }
-                    pc.close();
                 } catch (e) {
-                    console.log('WebRTC method failed:', e);
+                    // ActiveX در دسترس نیست
                 }
                 
-                // روش 2: از User-Agent
-                if (!computerName) {
-                    const userAgent = navigator.userAgent;
-                    
-                    // جستجو برای نام کامپیوتر در User-Agent
-                    const patterns = [
-                        /Windows NT [^;]+; ([^;)]+)/,
-                        /Windows ([^;)]+)/
-                    ];
-                    
-                    for (let pattern of patterns) {
-                        const match = userAgent.match(pattern);
-                        if (match && match[1]) {
-                            const potential = match[1].trim();
-                            if (!['Win64', 'x64', 'WOW64', 'ARM64', 'Trident'].includes(potential)) {
-                                computerName = potential;
-                                break;
-                            }
-                        }
+                // روش 2: درخواست از API سرور
+                try {
+                    const response = await fetch('/api/computer-name');
+                    const data = await response.json();
+                    if (data.computer_name && data.computer_name !== 'کاربر-ناشناس') {
+                        computerName = data.computer_name;
+                        localStorage.setItem('computer_name', computerName);
+                        return computerName;
                     }
+                } catch (e) {
+                    console.log('خطا در دریافت نام از API:', e);
                 }
                 
-                // روش 3: استفاده از hostname
-                if (!computerName && window.location.hostname && window.location.hostname !== 'localhost') {
-                    computerName = window.location.hostname;
+                // روش 3: درخواست از کاربر برای وارد کردن نام کامپیوتر
+                computerName = prompt('لطفاً نام کامپیوتر خود را وارد کنید:\n(این نام برای شناسایی شما در لاگ‌ها استفاده می‌شود)', savedComputerName || '');
+                if (!computerName || computerName.trim() === '') {
+                    computerName = 'کاربر-ناشناس';
                 }
                 
-                // روش 4: تولید نام بر اساس مشخصات مرورگر
-                if (!computerName) {
-                    const platform = navigator.platform || 'Unknown';
-                    const language = navigator.language || 'fa';
-                    const timestamp = Date.now().toString().slice(-4);
-                    computerName = `${platform}-${language}-${timestamp}`;
-                }
+                // ذخیره نام کامپیوتر در localStorage
+                localStorage.setItem('computer_name', computerName);
                 
-                return computerName || 'کاربر-ناشناس';
+                return computerName;
             } catch (error) {
                 console.log('خطا در دریافت نام کامپیوتر:', error);
                 return 'کاربر-ناشناس';
@@ -237,6 +219,23 @@
             const computerName = await getComputerName();
             computerNameField.value = computerName;
             console.log('نام کامپیوتر تشخیص داده شده:', computerName);
+            
+            // اضافه کردن دکمه برای تغییر نام کامپیوتر
+            const form = document.querySelector('form');
+            const changeNameButton = document.createElement('button');
+            changeNameButton.type = 'button';
+            changeNameButton.textContent = 'تغییر نام کامپیوتر';
+            changeNameButton.style.marginTop = '10px';
+            changeNameButton.style.backgroundColor = '#6c757d';
+            changeNameButton.onclick = function() {
+                const newName = prompt('نام جدید کامپیوتر را وارد کنید:', computerName);
+                if (newName && newName.trim() !== '') {
+                    localStorage.setItem('computer_name', newName.trim());
+                    computerNameField.value = newName.trim();
+                    alert('نام کامپیوتر تغییر کرد: ' + newName.trim());
+                }
+            };
+            form.appendChild(changeNameButton);
         });
     </script>
 </body>
