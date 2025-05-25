@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تنظیمات ادمین - دفترچه تلفن</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Vazirmatn', Arial, sans-serif;
+            background-color: #f5f6fa;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .btn-secondary {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(255,255,255,0.3);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .settings-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f2f6;
+        }
+        
+        .card-header h2 {
+            color: #333;
+            font-size: 18px;
+            margin-right: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.2s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .alert-error {
+            background-color: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        
+        .alert-success {
+            background-color: #efe;
+            color: #363;
+            border: 1px solid #cfc;
+        }
+        
+        .menu-section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            border: 1px solid #e1e5e9;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+        }
+        
+        .menu-item-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .menu-item-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+        
+        .add-menu-form {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+        
+        .icon-preview {
+            width: 24px;
+            height: 24px;
+            display: inline-block;
+        }
+        
+        @media (max-width: 768px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .menu-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>⚙️ تنظیمات ادمین</h1>
+                    <div class="header-actions">
+            <a href="{{ url_for('view_logs') }}" class="btn btn-secondary">📊 لاگ‌های ویرایش</a>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">صفحه اصلی</a>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary">خروج</a>
+        </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'error' if category == 'error' else 'success' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="settings-grid">
+            <!-- تغییر پسورد -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h2>🔐 تغییر پسورد</h2>
+                </div>
+                
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="action" value="change_password">
+                    
+                    <div class="form-group">
+                        <label for="new_password">پسورد جدید:</label>
+                        <input type="password" id="new_password" name="new_password" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm_password">تکرار پسورد:</label>
+                        <input type="password" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">تغییر پسورد</button>
+                </form>
+            </div>
+            
+            <!-- آمار سیستم -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h2>📊 آمار سیستم</h2>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>تعداد مخاطبین:</span>
+                        <strong>{{ menu_items|length if menu_items else 0 }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>آیتم‌های منو:</span>
+                        <strong>{{ menu_items|length if menu_items else 0 }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>وضعیت دیتابیس:</span>
+                        <strong style="color: #27ae60;">متصل</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- مدیریت منو -->
+        <div class="menu-section">
+            <div class="card-header">
+                <h2>🎯 مدیریت منوی کناری</h2>
+            </div>
+            
+            <!-- لیست آیتم‌های موجود -->
+            <div class="menu-items-list">
+                {% for item in menu_items %}
+                <div class="menu-item">
+                    <div class="menu-item-info">
+                        <span class="icon-preview">
+                            {% if item.icon %}
+                                <i data-feather="{{ item.icon }}"></i>
+                            {% else %}
+                                📄
+                            {% endif %}
+                        </span>
+                        <div>
+                            <strong>{{ item.title }}</strong>
+                            <br>
+                            <small style="color: #666;">{{ item.url }}</small>
+                        </div>
+                        <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; {{ 'background-color: #d4edda; color: #155724;' if item.is_active else 'background-color: #f8d7da; color: #721c24;' }}">
+                            {{ 'فعال' if item.is_active else 'غیرفعال' }}
+                        </span>
+                    </div>
+                    
+                    <div class="menu-item-actions">
+                        <button onclick="editMenuItem({{ item.id }}, '{{ item.title }}', '{{ item.url }}', '{{ item.icon }}', {{ item.is_active }})" class="btn btn-primary btn-small">ویرایش</button>
+                        <form method="POST" action="{{ url_for('admin_menu') }}" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="item_id" value="{{ item.id }}">
+                            <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('آیا مطمئن هستید؟')">حذف</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- فرم افزودن آیتم جدید -->
+            <div class="add-menu-form">
+                <h3 style="margin-bottom: 15px;">➕ افزودن آیتم جدید</h3>
+                <form method="POST" action="{{ url_for('admin_menu') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="action" value="add">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>عنوان:</label>
+                            <input type="text" name="title" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>لینک:</label>
+                            <input type="url" name="url" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>آیکون (Feather):</label>
+                            <input type="text" name="icon" placeholder="clock, mail, etc.">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success">افزودن</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal ویرایش -->
+    <div id="editModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px;">
+            <h3 style="margin-bottom: 20px;">ویرایش آیتم منو</h3>
+            
+            <form method="POST" action="{{ url_for('admin_menu') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="action" value="edit">
+                <input type="hidden" name="item_id" id="edit_item_id">
+                
+                <div class="form-group">
+                    <label>عنوان:</label>
+                    <input type="text" name="title" id="edit_title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>لینک:</label>
+                    <input type="url" name="url" id="edit_url" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>آیکون:</label>
+                    <input type="text" name="icon" id="edit_icon">
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_active" id="edit_is_active" value="1">
+                        فعال
+                    </label>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" onclick="closeEditModal()" class="btn btn-secondary">انصراف</button>
+                    <button type="submit" class="btn btn-primary">ذخیره</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script>
+        feather.replace();
+        
+        function editMenuItem(id, title, url, icon, isActive) {
+            document.getElementById('edit_item_id').value = id;
+            document.getElementById('edit_title').value = title;
+            document.getElementById('edit_url').value = url;
+            document.getElementById('edit_icon').value = icon;
+            document.getElementById('edit_is_active').checked = isActive;
+            document.getElementById('editModal').style.display = 'block';
+        }
+        
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+        
+        // بستن modal با کلیک روی پس‌زمینه
+        document.getElementById('editModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+    </script>
+</body>
+</html> 

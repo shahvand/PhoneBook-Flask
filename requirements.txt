@@ -4,3 +4,5 @@ bleach
 tinycss2
 gunicorn
 Werkzeug>=2.0.0
+PyMySQL>=1.0.0
+python-dotenv>=0.19.0

@@ -122,6 +122,34 @@
             font-weight: 500;
         }
 
+        /* دکمه‌های هدر */
+        .header-btn {
+            padding: 8px 16px;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .header-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .header-btn.admin {
+            background-color: var(--dark-color);
+        }
+
+        .header-btn.admin:hover {
+            background-color: #0f172a;
+        }
+
+
+
         /* جستجو */
         #search {
             width: 100%;
@@ -236,6 +264,11 @@
                 gap: 15px;
             }
 
+            .header-btn {
+                font-size: 12px;
+                padding: 6px 12px;
+            }
+
             header img {
                 order: -1;
             }
@@ -253,36 +286,154 @@
             width: auto;
             order: 2;
         }
+
+        /* قالب ردیف شرکتی */
+        .corporate-row-template {
+            display: none;
+        }
+
+        .company-card {
+            background-color: var(--white);
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .company-card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: var(--dark-color);
+            color: var(--white);
+        }
+        
+        .company-name {
+            margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        
+        .company-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .company-logo img {
+            max-width: 80%;
+            max-height: 80%;
+        }
+        
+        .company-details {
+            padding: 20px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .company-info {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .info-row {
+            margin-bottom: 10px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: var(--text-color);
+            margin-left: 10px;
+        }
+        
+        .info-value {
+            color: var(--text-color);
+        }
+        
+        .company-description {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            background-color: var(--background-color);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .company-footer {
+            padding: 15px 20px;
+            background-color: var(--hover-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .company-department {
+            font-size: 14px;
+            color: var(--text-color);
+        }
+        
+        .department-value {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        /* استایل عنوان بخش */
+        .section-title {
+            color: var(--dark-color);
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            position: relative;
+            padding-right: 15px;
+        }
+        
+        .section-title:before {
+            content: "";
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 5px;
+            height: 25px;
+            background-color: var(--primary-color);
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
     <!-- نوار کناری -->
     <div class="sidebar">
-        <!-- لینک‌ها -->
-        <a href="https://time.aftabnetad.com/" title="حضور و غیاب">
-            <i class="material-icons">schedule</i>
-            حضور و غیاب
+        <!-- لینک‌های دینامیک از دیتابیس -->
+        {% for item in menu_items %}
+        <a href="{{ item.url }}" title="{{ item.title }}">
+            {% if item.icon %}
+                <i data-feather="{{ item.icon }}"></i>
+            {% else %}
+                <i class="material-icons">link</i>
+            {% endif %}
+            {{ item.title }}
         </a>
-        <a href="https://ato.aftabnetad.com/" title="اتوماسیون اداری">
-            <i class="material-icons">work</i>
-            اتوماسیون اداری
-        </a>
-        <a href="https://mail.aftabnetad.com/" title="ایمیل تحت وب">
-            <i class="material-icons">email</i>
-            ایمیل تحت وب
-        </a>
-        <a href="http://help.aftabnetad.com" title="هلپ">
-            <i class="material-icons">help_outline</i>
-            هلپ
-        </a>
-        <a href="http://news.aftabnetad.com/" title="اخبار">
-            <i class="material-icons">announcement</i>
-            اخبار
-        </a>
-        <a href="https://acloud.aftabnetad.com/" title="فایل شیرینگ">
-            <i class="material-icons">folder_shared</i>
-            فایل شیرینگ
-        </a>
+        {% endfor %}
+        
+        <!-- لینک‌های مدیریتی -->
+        <div style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+            <a href="{{ url_for('admin_login') }}" title="ورود به پنل ادمین">
+                <i data-feather="settings"></i>
+                پنل ادمین
+            </a>
+        </div>
     </div>
 
     <!-- محوای اصلی -->
@@ -294,6 +445,9 @@
                 <div class="clock">
                     <div class="date" id="date"></div>
                     <div class="time" id="time"></div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <a href="{{ url_for('admin_login') }}" class="header-btn admin">⚙️ ورود ادمین</a>
                 </div>
             </div>
         </header>
@@ -328,6 +482,51 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        <!-- نمونه شرکت‌ها -->
+        <h2 class="section-title" style="margin-top: 40px;">شرکت‌های همکار</h2>
+        <div id="companies-container">
+            <!-- اینجا با استفاده از JavaScript، ردیف‌های شرکتی اضافه می‌شوند -->
+        </div>
+
+        <!-- قالب ردیف شرکتی -->
+        <div class="corporate-row-template" style="display: none;">
+            <div class="company-card">
+                <div class="company-header">
+                    <h3 class="company-name">نام شرکت</h3>
+                    <div class="company-logo">
+                        <img src="" alt="لوگو شرکت">
+                    </div>
+                </div>
+                <div class="company-details">
+                    <div class="company-info">
+                        <div class="info-row">
+                            <span class="info-label">شماره تماس:</span>
+                            <span class="info-value company-phone">۰۰۰۰۰۰۰۰۰۰۰</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">آدرس:</span>
+                            <span class="info-value company-address">آدرس شرکت</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">ایمیل:</span>
+                            <span class="info-value company-email">info@company.com</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">وب‌سایت:</span>
+                            <span class="info-value company-website">www.company.com</span>
+                        </div>
+                    </div>
+                    <div class="company-description">
+                        <p>توضیحات شرکت در این قسمت قرار می‌گیرد.</p>
+                    </div>
+                </div>
+                <div class="company-footer">
+                    <a href="#" class="button-edit company-edit">ویرایش</a>
+                    <span class="company-department">دپارتمان: <span class="department-value">فناوری اطلاعات</span></span>
+                </div>
+            </div>
+        </div>
 
         <!-- اسکریپت‌ها -->
         <script>
@@ -532,7 +731,78 @@
                     }
                 });
             });
+
+            // افزودن کد JavaScript برای استفاده از این قالب
+            function createCompanyRow(company) {
+                const template = document.querySelector('.corporate-row-template').cloneNode(true);
+                template.style.display = 'block';
+                
+                // پر کردن اطلاعات شرکت
+                template.querySelector('.company-name').textContent = company.name;
+                template.querySelector('.company-phone').textContent = company.phone;
+                template.querySelector('.company-address').textContent = company.address;
+                template.querySelector('.company-email').textContent = company.email;
+                template.querySelector('.company-website').textContent = company.website;
+                template.querySelector('.company-description p').textContent = company.description;
+                template.querySelector('.department-value').textContent = company.department;
+                
+                // اگر لوگو داشت
+                if (company.logo) {
+                    template.querySelector('.company-logo img').src = company.logo;
+                }
+                
+                // اگر دکمه ویرایش نیاز به لینک خاصی دارد
+                template.querySelector('.company-edit').href = `/edit-company/${company.id}`;
+                
+                return template;
+            }
+
+            // داده‌های نمونه شرکت‌ها
+            const sampleCompanies = [
+                {
+                    id: 1,
+                    name: "شرکت فناوری آفتاب",
+                    phone: "۰۲۱۸۸۷۶۵۴۳۲",
+                    address: "تهران، خیابان ولیعصر، پلاک ۱۲۳",
+                    email: "info@aftab-tech.com",
+                    website: "www.aftab-tech.com",
+                    description: "ارائه دهنده خدمات فناوری اطلاعات و توسعه نرم‌افزارهای سازمانی",
+                    department: "فناوری اطلاعات",
+                    logo: "/static/images/sample-logo.png"
+                },
+                {
+                    id: 2,
+                    name: "شرکت بازرگانی آسمان",
+                    phone: "۰۲۱۷۷۶۵۴۳۲۱",
+                    address: "تهران، خیابان شریعتی، پلاک ۴۵۶",
+                    email: "contact@aseman-trade.com",
+                    website: "www.aseman-trade.com",
+                    description: "واردات و صادرات محصولات صنعتی و تجاری با بیش از ۱۵ سال سابقه درخشان",
+                    department: "بازرگانی",
+                    logo: "/static/images/sample-logo2.png"
+                }
+            ];
+
+            // نمایش شرکت‌های نمونه در صفحه
+            document.addEventListener('DOMContentLoaded', function() {
+                const companiesContainer = document.getElementById('companies-container');
+                
+                // پاک کردن محتوای فعلی
+                companiesContainer.innerHTML = '';
+                
+                // افزودن هر شرکت به صفحه
+                sampleCompanies.forEach(company => {
+                    const companyElement = createCompanyRow(company);
+                    companiesContainer.appendChild(companyElement);
+                });
+            });
         </script>
     </div>
+    
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script>
+        feather.replace();
+    </script>
 </body>
 </html>
