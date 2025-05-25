@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Computer Name Detection</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <script>
+        // تابع برای دریافت نام کامپیوتر واقعی
+        async function detectComputerName() {
+            let computerName = '';
+            
+            // روش 1: ActiveX (IE/Edge Legacy)
+            try {
+                if (window.ActiveXObject || "ActiveXObject" in window) {
+                    const network = new ActiveXObject("WScript.Network");
+                    computerName = network.ComputerName;
+                    if (computerName) {
+                        return { name: computerName, method: 'ActiveX' };
+                    }
+                }
+            } catch (e) {
+                console.log('ActiveX failed:', e);
+            }
+            
+            // روش 2: Windows Shell (IE/Edge)
+            try {
+                const shell = new ActiveXObject("WScript.Shell");
+                const env = shell.Environment("Process");
+                computerName = env("COMPUTERNAME");
+                if (computerName) {
+                    return { name: computerName, method: 'WScript.Shell' };
+                }
+            } catch (e) {
+                console.log('WScript.Shell failed:', e);
+            }
+            
+            // روش 3: WebRTC hostname detection
+            try {
+                const pc = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+                
+                pc.createDataChannel('test');
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                
+                return new Promise((resolve) => {
+                    let resolved = false;
+                    
+                    pc.onicecandidate = (event) => {
+                        if (resolved) return;
+                        
+                        if (event.candidate) {
+                            const candidate = event.candidate.candidate;
+                            
+                            // جستجو برای hostname
+                            const patterns = [
+                                /(\w+)\.local/,
+                                /host (\w+)/,
+                                /(\w+)-\w+\.local/
+                            ];
+                            
+                            for (let pattern of patterns) {
+                                const match = candidate.match(pattern);
+                                if (match && match[1]) {
+                                    resolved = true;
+                                    pc.close();
+                                    resolve({ name: match[1], method: 'WebRTC' });
+                                    return;
+                                }
+                            }
+                        } else {
+                            // ICE gathering finished
+                            if (!resolved) {
+                                resolved = true;
+                                pc.close();
+                                resolve({ name: '', method: 'WebRTC-failed' });
+                            }
+                        }
+                    };
+                    
+                    // Timeout after 5 seconds
+                    setTimeout(() => {
+                        if (!resolved) {
+                            resolved = true;
+                            pc.close();
+                            resolve({ name: '', method: 'WebRTC-timeout' });
+                        }
+                    }, 5000);
+                });
+            } catch (e) {
+                console.log('WebRTC failed:', e);
+            }
+            
+            return { name: 'Unknown-Computer', method: 'fallback' };
+        }
+        
+        // ارسال نام کامپیوتر به والد
+        detectComputerName().then(result => {
+            if (window.parent && window.parent.postMessage) {
+                window.parent.postMessage({
+                    type: 'computer-name',
+                    name: result.name,
+                    method: result.method
+                }, '*');
+            }
+        });
+    </script>
+</body>
+</html> 
