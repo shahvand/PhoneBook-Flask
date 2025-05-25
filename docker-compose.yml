@@ -22,8 +22,6 @@ services:
   phonebook:
     build: .
     container_name: phonebook-app
-    ports:
-      - "5000:5000"
     environment:
       - DB_HOST=192.168.100.26
       - DB_USER=root
@@ -34,10 +32,14 @@ services:
       - ./static:/app/static
     restart: unless-stopped
     networks:
-      - phonebook-network
+      - traefik_network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phonebook.rule=Host(`phonebook.aftabnetad.com`)"
+      - "traefik.http.routers.phonebook.entrypoints=web"
+      - "traefik.http.services.phonebook.loadbalancer.server.port=5000"
+      - "traefik.docker.network=traefik_network"
 
 networks:
   traefik_network:
-    driver: bridge
-  phonebook-network:
     driver: bridge
