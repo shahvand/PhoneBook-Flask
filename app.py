@@ -241,8 +241,7 @@ def index():
         can_edit = user_can_edit()
         menu_items = get_menu_items()
         
-        # ثبت لاگ بازدید از صفحه اصلی
-        log_action(None, 'page_visit', 'صفحه اصلی')
+
         
         return render_template('index.html', contacts=contacts, user_can_edit=can_edit, menu_items=menu_items)
     except pymysql.Error as e:
@@ -268,11 +267,9 @@ def admin_login():
                     
                     if stored_password and stored_password[0] == hashed_password:
                         session['admin_logged_in'] = True
-                        log_action(None, 'admin_login', 'ورود موفق به پنل ادمین')
                         flash('با موفقیت وارد شدید', 'success')
                         return redirect(url_for('admin_settings'))
                     else:
-                        log_action(None, 'admin_login_failed', 'تلاش ناموفق برای ورود به پنل ادمین')
                         flash('پسورد اشتباه است', 'error')
                 except pymysql.Error as e:
                     flash('خطا در بررسی پسورد', 'error')
@@ -284,7 +281,6 @@ def admin_login():
 # خروج ادمین
 @app.route('/admin/logout')
 def admin_logout():
-    log_action(None, 'admin_logout', 'خروج از پنل ادمین')
     session.pop('admin_logged_in', None)
     flash('با موفقیت خارج شدید', 'success')
     return redirect(url_for('index'))
@@ -313,7 +309,6 @@ def admin_settings():
                         conn.commit()
                         cursor.close()
                         conn.close()
-                        log_action(None, 'password_change', 'تغییر پسورد ادمین')
                         flash('پسورد با موفقیت تغییر کرد', 'success')
                     except pymysql.Error as e:
                         flash('خطا در تغییر پسورد', 'error')
@@ -358,7 +353,6 @@ def admin_menu():
             
             if title and url:
                 cursor.execute("INSERT INTO menu_items (title, url, icon, is_active, sort_order) VALUES (%s, %s, %s, 1, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM menu_items m))", (title, url, icon))
-                log_action(None, 'menu_add', f'افزودن آیتم منو: {title}')
                 flash('آیتم منو اضافه شد', 'success')
             else:
                 flash('عنوان و لینک الزامی است', 'error')
@@ -372,7 +366,6 @@ def admin_menu():
             
             if item_id and title and url:
                 cursor.execute("UPDATE menu_items SET title = %s, url = %s, icon = %s, is_active = %s WHERE id = %s", (title, url, icon, is_active, item_id))
-                log_action(None, 'menu_edit', f'ویرایش آیتم منو: {title}')
                 flash('آیتم منو ویرایش شد', 'success')
             else:
                 flash('اطلاعات کامل نیست', 'error')
@@ -380,18 +373,13 @@ def admin_menu():
         elif action == 'delete':
             item_id = request.form.get('item_id')
             if item_id:
-                # دریافت نام آیتم قبل از حذف
-                cursor.execute("SELECT title FROM menu_items WHERE id = %s", (item_id,))
-                item_title = cursor.fetchone()
                 cursor.execute("DELETE FROM menu_items WHERE id = %s", (item_id,))
-                log_action(None, 'menu_delete', f'حذف آیتم منو: {item_title[0] if item_title else "نامشخص"}')
                 flash('آیتم منو حذف شد', 'success')
         
         elif action == 'reorder':
             item_ids = request.form.getlist('item_order[]')
             for index, item_id in enumerate(item_ids):
                 cursor.execute("UPDATE menu_items SET sort_order = %s WHERE id = %s", (index + 1, item_id))
-            log_action(None, 'menu_reorder', 'تغییر ترتیب آیتم‌های منو')
             flash('ترتیب منو تغییر کرد', 'success')
         
         conn.commit()
