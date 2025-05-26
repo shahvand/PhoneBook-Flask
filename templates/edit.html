@@ -159,49 +159,30 @@
     </div>
 
     <script>
-        // دریافت شناسه کلاینت بر اساس آی‌پی
-        async function getClientIdentifier() {
-            try {
-                // درخواست آی‌پی کلاینت از سرور
-                const response = await fetch('/api/client-info');
-                const data = await response.json();
-                
-                if (data.ip_address) {
-                    // تولید شناسه بر اساس آی‌پی
-                    const ip = data.ip_address;
-                    const ipParts = ip.split('.');
-                    
-                    if (ipParts.length === 4) {
-                        // برای IPv4
-                        const clientId = `کلاینت-${ipParts[2]}-${ipParts[3]}`;
-                        console.log('✅ شناسه کلاینت بر اساس آی‌پی:', clientId, '(آی‌پی:', ip + ')');
-                        return clientId;
-                    } else {
-                        // برای IPv6 یا سایر فرمت‌ها
-                        const shortIp = ip.replace(/[:.]/g, '-').substring(0, 15);
-                        const clientId = `کلاینت-${shortIp}`;
-                        console.log('✅ شناسه کلاینت:', clientId, '(آی‌پی:', ip + ')');
-                        return clientId;
-                    }
-                }
-                
-                return 'کلاینت-ناشناس';
-            } catch (error) {
-                console.log('❌ خطا در دریافت آی‌پی:', error);
-                return 'کلاینت-ناشناس';
-            }
-        }
-        
-        // تنظیم شناسه کلاینت در فیلد مخفی
-        document.addEventListener('DOMContentLoaded', async function() {
+        // ساده: فقط اطلاعات مرورگر رو بفرست
+        document.addEventListener('DOMContentLoaded', function() {
             const computerNameField = document.getElementById('computer_name');
             
-            console.log('🔍 دریافت شناسه کلاینت...');
+            // دریافت نوع مرورگر
+            let browserName = 'نامشخص';
+            const userAgent = navigator.userAgent;
             
-            const clientId = await getClientIdentifier();
-            computerNameField.value = clientId;
+            if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) {
+                browserName = 'Chrome';
+            } else if (userAgent.includes('Firefox')) {
+                browserName = 'Firefox';
+            } else if (userAgent.includes('Edg')) {
+                browserName = 'Edge';
+            } else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) {
+                browserName = 'Safari';
+            } else if (userAgent.includes('Opera')) {
+                browserName = 'Opera';
+            }
             
-            console.log('✅ شناسه نهایی:', clientId);
+            // تنظیم نام مرورگر در فیلد
+            computerNameField.value = browserName;
+            
+            console.log('مرورگر تشخیص داده شده:', browserName);
         });
     </script>
 </body>

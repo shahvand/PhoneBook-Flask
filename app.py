@@ -36,116 +36,50 @@ def get_db_connection():
         print(f"خطا در اتصال به دیتابیس: {e}")
         return None
 
-# تابع برای دریافت اطلاعات کاربر
-def get_user_info():
-    user_ip = request.remote_addr
-    user_agent = request.headers.get('User-Agent', '')
-    
-    # دریافت نام کامپیوتر واقعی کاربر
-    computer_name = ''
-    try:
-        # در محیط Docker، سعی کن نام هاست واقعی رو بگیری
-        if 'X-Forwarded-For' in request.headers:
-            # اگر از پروکسی یا load balancer استفاده می‌شه
-            real_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
-            user_ip = real_ip
-        
-        # استخراج نام کامپیوتر از User-Agent
-        if 'Windows' in user_agent:
-            # جستجو برای نام کامپیوتر در User-Agent
-            import re
-            # الگوهای مختلف برای استخراج نام کامپیوتر
-            patterns = [
-                r'Windows NT [^;]+; ([^;)]+)',  # Windows NT pattern
-                r'Windows ([^;)]+)',            # General Windows pattern
-            ]
-            for pattern in patterns:
-                match = re.search(pattern, user_agent)
-                if match:
-                    potential_name = match.group(1).strip()
-                    # فیلتر کردن نام‌های غیرمفید
-                    if potential_name not in ['Win64', 'x64', 'WOW64', 'ARM64']:
-                        computer_name = potential_name
-                        break
-        
-        # اگر از User-Agent نتونستیم نام کامپیوتر رو بگیریم
-        if not computer_name:
-            # بررسی header های اضافی که ممکنه نام کامپیوتر داشته باشن
-            computer_name = request.headers.get('X-Computer-Name', '')
-            if not computer_name:
-                computer_name = request.headers.get('X-Host-Name', '')
-        
-        # اگر هنوز نام کامپیوتر نداریم، از آی‌پی استفاده کن
-        if not computer_name or computer_name in ['Win64', 'x64', 'WOW64', 'ARM64']:
-            # تولید نام بر اساس آی‌پی
-            ip_parts = user_ip.split('.')
-            if len(ip_parts) == 4:
-                computer_name = f'PC-{ip_parts[-2]}-{ip_parts[-1]}'
-            else:
-                computer_name = f'کاربر-{user_ip.replace(".", "-").replace(":", "-")}'
-            
-    except Exception as e:
-        print(f"خطا در دریافت اطلاعات کاربر: {e}")
-        computer_name = f'نامشخص-{user_ip.replace(".", "-")}'
-    
-    return {
-        'ip_address': user_ip,
-        'user_agent': user_agent,
-        'computer_name': computer_name
-    }
 
-# تابع برای ثبت لاگ با نام کامپیوتر از کلاینت
-def log_action_with_computer(contact_id, action, additional_info='', client_computer_name=''):
-    # فقط لاگ ویرایش ثبت می‌شود
-    if action != 'edit':
-        return
-        
+
+# تابع ساده برای ثبت لاگ ویرایش
+def log_edit_action(contact_id, contact_name, browser_name=''):
     conn = get_db_connection()
     if conn:
         try:
             cursor = conn.cursor()
-            user_info = get_user_info()
             
-            # استفاده از نام کامپیوتر ارسالی از کلاینت
-            computer_name = client_computer_name if client_computer_name else user_info['computer_name']
+            # دریافت آی‌پی کاربر
+            user_ip = request.remote_addr
+            if 'X-Forwarded-For' in request.headers:
+                user_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+            elif 'X-Real-IP' in request.headers:
+                user_ip = request.headers.get('X-Real-IP')
             
-            # ثبت لاگ با اطلاعات کامل
+            # دریافت نوع مرورگر از User-Agent
+            user_agent = request.headers.get('User-Agent', '')
+            if not browser_name:
+                if 'Chrome' in user_agent and 'Edg' not in user_agent:
+                    browser_name = 'Chrome'
+                elif 'Firefox' in user_agent:
+                    browser_name = 'Firefox'
+                elif 'Edg' in user_agent:
+                    browser_name = 'Edge'
+                elif 'Safari' in user_agent and 'Chrome' not in user_agent:
+                    browser_name = 'Safari'
+                else:
+                    browser_name = 'نامشخص'
+            
+            # ثبت لاگ ساده و واضح
             cursor.execute('''
                 INSERT INTO logs (contact_id, action, ip_address, user_agent, computer_name, additional_info) 
                 VALUES (%s, %s, %s, %s, %s, %s)
-            ''', (contact_id, action, user_info['ip_address'], user_info['user_agent'], 
-                  computer_name, additional_info))
+            ''', (contact_id, 'edit', user_ip, user_agent, browser_name, f'ویرایش مخاطب: {contact_name}'))
             
             conn.commit()
             cursor.close()
             conn.close()
+            print(f"✅ لاگ ثبت شد: {contact_name} - آی‌پی: {user_ip} - مرورگر: {browser_name}")
         except pymysql.Error as e:
-            print(f"خطا در ثبت لاگ: {e}")
+            print(f"❌ خطا در ثبت لاگ: {e}")
 
-# تابع برای ثبت لاگ با اطلاعات کامل - فقط برای ویرایش
-def log_action(contact_id, action, additional_info=''):
-    # فقط لاگ ویرایش ثبت می‌شود
-    if action != 'edit':
-        return
-        
-    conn = get_db_connection()
-    if conn:
-        try:
-            cursor = conn.cursor()
-            user_info = get_user_info()
-            
-            # ثبت لاگ با اطلاعات کامل
-            cursor.execute('''
-                INSERT INTO logs (contact_id, action, ip_address, user_agent, computer_name, additional_info) 
-                VALUES (%s, %s, %s, %s, %s, %s)
-            ''', (contact_id, action, user_info['ip_address'], user_info['user_agent'], 
-                  user_info['computer_name'], additional_info))
-            
-            conn.commit()
-            cursor.close()
-            conn.close()
-        except pymysql.Error as e:
-            print(f"خطا در ثبت لاگ: {e}")
+
 
 # تابع برای ایجاد جداول در صورت عدم وجود
 def init_database():
@@ -470,30 +404,7 @@ def admin_menu():
     
     return redirect(url_for('admin_settings'))
 
-# API برای دریافت اطلاعات کلاینت (آی‌پی)
-@app.route('/api/client-info')
-def get_client_info():
-    try:
-        user_ip = request.remote_addr
-        
-        # بررسی X-Forwarded-For برای آی‌پی واقعی در صورت استفاده از پروکسی
-        if 'X-Forwarded-For' in request.headers:
-            forwarded_ips = request.headers.get('X-Forwarded-For').split(',')
-            user_ip = forwarded_ips[0].strip()
-        elif 'X-Real-IP' in request.headers:
-            user_ip = request.headers.get('X-Real-IP')
-        
-        return {
-            'ip_address': user_ip,
-            'user_agent': request.headers.get('User-Agent', ''),
-            'timestamp': str(datetime.now())
-        }
-    except Exception as e:
-        return {
-            'ip_address': 'نامشخص',
-            'user_agent': '',
-            'timestamp': str(datetime.now())
-        }
+
 
 
 
@@ -515,7 +426,7 @@ def edit(id):
             position = request.form.get('position')
             department = request.form.get('department')
             location = request.form.get('location')
-            client_computer_name = request.form.get('computer_name', '')
+            browser_name = request.form.get('computer_name', '')  # حالا نام مرورگر است
 
             if not phone:
                 return "فیلد شماره تلفن نمی‌تواند خالی باشد.", 400
@@ -526,8 +437,8 @@ def edit(id):
                 WHERE id = %s
             ''', (full_name, position, department, location, id))
 
-            # ثبت لاگ با نام کامپیوتر از کلاینت
-            log_action_with_computer(id, 'edit', f'ویرایش مخاطب: {full_name}', client_computer_name)
+            # ثبت لاگ ساده
+            log_edit_action(id, full_name, browser_name)
             
             conn.commit()
             cursor.close()
