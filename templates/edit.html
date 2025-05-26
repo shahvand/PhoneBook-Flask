@@ -159,89 +159,49 @@
     </div>
 
     <script>
-        // دریافت نام کامپیوتر واقعی از سیستم عامل
-        async function getRealComputerName() {
-            return new Promise((resolve) => {
-                let computerName = '';
-                let resolved = false;
+        // دریافت شناسه کلاینت بر اساس آی‌پی
+        async function getClientIdentifier() {
+            try {
+                // درخواست آی‌پی کلاینت از سرور
+                const response = await fetch('/api/client-info');
+                const data = await response.json();
                 
-                // روش 1: استفاده مستقیم از ActiveX
-                try {
-                    if (window.ActiveXObject || "ActiveXObject" in window) {
-                        const network = new ActiveXObject("WScript.Network");
-                        computerName = network.ComputerName;
-                        if (computerName) {
-                            console.log('✅ نام کامپیوتر از ActiveX:', computerName);
-                            resolve(computerName);
-                            return;
-                        }
+                if (data.ip_address) {
+                    // تولید شناسه بر اساس آی‌پی
+                    const ip = data.ip_address;
+                    const ipParts = ip.split('.');
+                    
+                    if (ipParts.length === 4) {
+                        // برای IPv4
+                        const clientId = `کلاینت-${ipParts[2]}-${ipParts[3]}`;
+                        console.log('✅ شناسه کلاینت بر اساس آی‌پی:', clientId, '(آی‌پی:', ip + ')');
+                        return clientId;
+                    } else {
+                        // برای IPv6 یا سایر فرمت‌ها
+                        const shortIp = ip.replace(/[:.]/g, '-').substring(0, 15);
+                        const clientId = `کلاینت-${shortIp}`;
+                        console.log('✅ شناسه کلاینت:', clientId, '(آی‌پی:', ip + ')');
+                        return clientId;
                     }
-                } catch (e) {
-                    console.log('❌ ActiveX در دسترس نیست:', e.message);
                 }
                 
-                // روش 2: استفاده از WScript.Shell
-                try {
-                    const shell = new ActiveXObject("WScript.Shell");
-                    const env = shell.Environment("Process");
-                    computerName = env("COMPUTERNAME");
-                    if (computerName) {
-                        console.log('✅ نام کامپیوتر از WScript.Shell:', computerName);
-                        resolve(computerName);
-                        return;
-                    }
-                } catch (e) {
-                    console.log('❌ WScript.Shell در دسترس نیست:', e.message);
-                }
-                
-                // روش 3: استفاده از iframe برای دسترسی بیشتر
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = '/static/computer-name.html';
-                document.body.appendChild(iframe);
-                
-                // گوش دادن به پیام از iframe
-                window.addEventListener('message', function(event) {
-                    if (event.data && event.data.type === 'computer-name' && !resolved) {
-                        resolved = true;
-                        document.body.removeChild(iframe);
-                        
-                        if (event.data.name && event.data.name !== 'Unknown-Computer') {
-                            console.log('✅ نام کامپیوتر از iframe:', event.data.name, '(روش:', event.data.method + ')');
-                            resolve(event.data.name);
-                        } else {
-                            console.log('❌ iframe نتوانست نام کامپیوتر را تشخیص دهد');
-                            resolve('کامپیوتر-ناشناس');
-                        }
-                    }
-                });
-                
-                // timeout بعد از 10 ثانیه
-                setTimeout(() => {
-                    if (!resolved) {
-                        resolved = true;
-                        if (iframe.parentNode) {
-                            document.body.removeChild(iframe);
-                        }
-                        console.log('⏰ timeout - استفاده از نام پیش‌فرض');
-                        resolve('کامپیوتر-ناشناس');
-                    }
-                }, 10000);
-            });
+                return 'کلاینت-ناشناس';
+            } catch (error) {
+                console.log('❌ خطا در دریافت آی‌پی:', error);
+                return 'کلاینت-ناشناس';
+            }
         }
         
-        // تنظیم نام کامپیوتر در فیلد مخفی
+        // تنظیم شناسه کلاینت در فیلد مخفی
         document.addEventListener('DOMContentLoaded', async function() {
             const computerNameField = document.getElementById('computer_name');
             
-            console.log('🔍 شروع تشخیص نام کامپیوتر واقعی...');
-            console.log('🖥️ User Agent:', navigator.userAgent);
-            console.log('🖥️ Platform:', navigator.platform);
+            console.log('🔍 دریافت شناسه کلاینت...');
             
-            const computerName = await getRealComputerName();
-            computerNameField.value = computerName;
+            const clientId = await getClientIdentifier();
+            computerNameField.value = clientId;
             
-            console.log('✅ نام کامپیوتر نهایی:', computerName);
+            console.log('✅ شناسه نهایی:', clientId);
         });
     </script>
 </body>

@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import hashlib
 import json
 import socket
+from datetime import datetime
 
 # بارگذاری متغیرهای محیطی از فایل .env
 load_dotenv()
@@ -469,82 +470,32 @@ def admin_menu():
     
     return redirect(url_for('admin_settings'))
 
-# API برای دریافت نام کامپیوتر
-@app.route('/api/computer-name')
-def get_computer_name_api():
+# API برای دریافت اطلاعات کلاینت (آی‌پی)
+@app.route('/api/client-info')
+def get_client_info():
     try:
-        # ابتدا چک کن که آیا نام کامپیوتر در session موجود است
-        if 'client_computer_name' in session:
-            return {'computer_name': session['client_computer_name']}
+        user_ip = request.remote_addr
         
-        # تلاش برای دریافت نام کامپیوتر از header های مختلف
-        computer_name = ''
+        # بررسی X-Forwarded-For برای آی‌پی واقعی در صورت استفاده از پروکسی
+        if 'X-Forwarded-For' in request.headers:
+            forwarded_ips = request.headers.get('X-Forwarded-For').split(',')
+            user_ip = forwarded_ips[0].strip()
+        elif 'X-Real-IP' in request.headers:
+            user_ip = request.headers.get('X-Real-IP')
         
-        # بررسی header های مختلف
-        headers_to_check = [
-            'X-Computer-Name',
-            'X-Host-Name', 
-            'X-Machine-Name',
-            'Computer-Name',
-            'Host-Name'
-        ]
-        
-        for header in headers_to_check:
-            if header in request.headers:
-                computer_name = request.headers[header]
-                break
-        
-        # اگر از header نگرفتیم، از User-Agent استفاده کن
-        if not computer_name:
-            user_agent = request.headers.get('User-Agent', '')
-            user_ip = request.remote_addr
-            
-            # تولید نام بر اساس آی‌پی
-            if user_ip:
-                ip_parts = user_ip.split('.')
-                if len(ip_parts) == 4:
-                    computer_name = f'PC-{ip_parts[-2]}-{ip_parts[-1]}'
-                else:
-                    computer_name = f'کاربر-{user_ip.replace(".", "-").replace(":", "-")}'
-        
-        return {'computer_name': computer_name or 'کاربر-ناشناس'}
+        return {
+            'ip_address': user_ip,
+            'user_agent': request.headers.get('User-Agent', ''),
+            'timestamp': str(datetime.now())
+        }
     except Exception as e:
-        return {'computer_name': 'کاربر-ناشناس'}
+        return {
+            'ip_address': 'نامشخص',
+            'user_agent': '',
+            'timestamp': str(datetime.now())
+        }
 
-# API برای دریافت نام کامپیوتر از طریق PowerShell
-@app.route('/api/get-computer-name-script')
-def get_computer_name_script():
-    """ارائه اسکریپت PowerShell برای دریافت نام کامپیوتر"""
-    base_url = request.url_root.rstrip('/')
-    script_content = f"""
-try {{
-    $computerName = $env:COMPUTERNAME
-    if ($computerName) {{
-        $url = "{base_url}/api/submit-computer-name"
-        $body = @{{computer_name = $computerName}} | ConvertTo-Json
-        $response = Invoke-RestMethod -Uri $url -Method POST -Body $body -ContentType "application/json"
-        Write-Host "نام کامپیوتر ارسال شد: $computerName"
-        Write-Host "پاسخ سرور: $($response.status)"
-    }}
-}} catch {{
-    Write-Host "خطا در دریافت نام کامپیوتر: $($_.Exception.Message)"
-}}
-"""
-    return script_content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
-# API برای دریافت نام کامپیوتر ارسالی از PowerShell
-@app.route('/api/submit-computer-name', methods=['POST'])
-def submit_computer_name():
-    try:
-        data = request.get_json()
-        computer_name = data.get('computer_name', '')
-        
-        # ذخیره نام کامپیوتر در session
-        session['client_computer_name'] = computer_name
-        
-        return {'status': 'success', 'computer_name': computer_name}
-    except Exception as e:
-        return {'status': 'error', 'message': str(e)}
 
 # ویرایش مخاطب
 @app.route('/edit/<int:id>', methods=('GET', 'POST'))
