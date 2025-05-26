@@ -287,129 +287,7 @@
             order: 2;
         }
 
-        /* قالب ردیف شرکتی */
-        .corporate-row-template {
-            display: none;
-        }
 
-        .company-card {
-            background-color: var(--white);
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        
-        .company-card:hover {
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .company-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background-color: var(--dark-color);
-            color: var(--white);
-        }
-        
-        .company-name {
-            margin: 0;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        
-        .company-logo {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background-color: var(--white);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        
-        .company-logo img {
-            max-width: 80%;
-            max-height: 80%;
-        }
-        
-        .company-details {
-            padding: 20px;
-            display: flex;
-            flex-wrap: wrap;
-        }
-        
-        .company-info {
-            flex: 1;
-            min-width: 300px;
-        }
-        
-        .info-row {
-            margin-bottom: 10px;
-        }
-        
-        .info-label {
-            font-weight: bold;
-            color: var(--text-color);
-            margin-left: 10px;
-        }
-        
-        .info-value {
-            color: var(--text-color);
-        }
-        
-        .company-description {
-            flex: 1;
-            min-width: 300px;
-            padding: 15px;
-            background-color: var(--background-color);
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-        
-        .company-footer {
-            padding: 15px 20px;
-            background-color: var(--hover-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .company-department {
-            font-size: 14px;
-            color: var(--text-color);
-        }
-        
-        .department-value {
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-        
-        /* استایل عنوان بخش */
-        .section-title {
-            color: var(--dark-color);
-            margin-bottom: 20px;
-            font-size: 24px;
-            font-weight: bold;
-            position: relative;
-            padding-right: 15px;
-        }
-        
-        .section-title:before {
-            content: "";
-            position: absolute;
-            right: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 5px;
-            height: 25px;
-            background-color: var(--primary-color);
-            border-radius: 3px;
-        }
     </style>
 </head>
 <body>
@@ -483,50 +361,7 @@
             </tbody>
         </table>
 
-        <!-- نمونه شرکت‌ها -->
-        <h2 class="section-title" style="margin-top: 40px;">شرکت‌های همکار</h2>
-        <div id="companies-container">
-            <!-- اینجا با استفاده از JavaScript، ردیف‌های شرکتی اضافه می‌شوند -->
-        </div>
 
-        <!-- قالب ردیف شرکتی -->
-        <div class="corporate-row-template" style="display: none;">
-            <div class="company-card">
-                <div class="company-header">
-                    <h3 class="company-name">نام شرکت</h3>
-                    <div class="company-logo">
-                        <img src="" alt="لوگو شرکت">
-                    </div>
-                </div>
-                <div class="company-details">
-                    <div class="company-info">
-                        <div class="info-row">
-                            <span class="info-label">شماره تماس:</span>
-                            <span class="info-value company-phone">۰۰۰۰۰۰۰۰۰۰۰</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">آدرس:</span>
-                            <span class="info-value company-address">آدرس شرکت</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">ایمیل:</span>
-                            <span class="info-value company-email">info@company.com</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">وب‌سایت:</span>
-                            <span class="info-value company-website">www.company.com</span>
-                        </div>
-                    </div>
-                    <div class="company-description">
-                        <p>توضیحات شرکت در این قسمت قرار می‌گیرد.</p>
-                    </div>
-                </div>
-                <div class="company-footer">
-                    <a href="#" class="button-edit company-edit">ویرایش</a>
-                    <span class="company-department">دپارتمان: <span class="department-value">فناوری اطلاعات</span></span>
-                </div>
-            </div>
-        </div>
 
         <!-- اسکریپت‌ها -->
         <script>
@@ -732,70 +567,9 @@
                 });
             });
 
-            // افزودن کد JavaScript برای استفاده از این قالب
-            function createCompanyRow(company) {
-                const template = document.querySelector('.corporate-row-template').cloneNode(true);
-                template.style.display = 'block';
-                
-                // پر کردن اطلاعات شرکت
-                template.querySelector('.company-name').textContent = company.name;
-                template.querySelector('.company-phone').textContent = company.phone;
-                template.querySelector('.company-address').textContent = company.address;
-                template.querySelector('.company-email').textContent = company.email;
-                template.querySelector('.company-website').textContent = company.website;
-                template.querySelector('.company-description p').textContent = company.description;
-                template.querySelector('.department-value').textContent = company.department;
-                
-                // اگر لوگو داشت
-                if (company.logo) {
-                    template.querySelector('.company-logo img').src = company.logo;
-                }
-                
-                // اگر دکمه ویرایش نیاز به لینک خاصی دارد
-                template.querySelector('.company-edit').href = `/edit-company/${company.id}`;
-                
-                return template;
-            }
 
-            // داده‌های نمونه شرکت‌ها
-            const sampleCompanies = [
-                {
-                    id: 1,
-                    name: "شرکت فناوری آفتاب",
-                    phone: "۰۲۱۸۸۷۶۵۴۳۲",
-                    address: "تهران، خیابان ولیعصر، پلاک ۱۲۳",
-                    email: "info@aftab-tech.com",
-                    website: "www.aftab-tech.com",
-                    description: "ارائه دهنده خدمات فناوری اطلاعات و توسعه نرم‌افزارهای سازمانی",
-                    department: "فناوری اطلاعات",
-                    logo: "/static/images/sample-logo.png"
-                },
-                {
-                    id: 2,
-                    name: "شرکت بازرگانی آسمان",
-                    phone: "۰۲۱۷۷۶۵۴۳۲۱",
-                    address: "تهران، خیابان شریعتی، پلاک ۴۵۶",
-                    email: "contact@aseman-trade.com",
-                    website: "www.aseman-trade.com",
-                    description: "واردات و صادرات محصولات صنعتی و تجاری با بیش از ۱۵ سال سابقه درخشان",
-                    department: "بازرگانی",
-                    logo: "/static/images/sample-logo2.png"
-                }
-            ];
 
-            // نمایش شرکت‌های نمونه در صفحه
-            document.addEventListener('DOMContentLoaded', function() {
-                const companiesContainer = document.getElementById('companies-container');
-                
-                // پاک کردن محتوای فعلی
-                companiesContainer.innerHTML = '';
-                
-                // افزودن هر شرکت به صفحه
-                sampleCompanies.forEach(company => {
-                    const companyElement = createCompanyRow(company);
-                    companiesContainer.appendChild(companyElement);
-                });
-            });
+
         </script>
     </div>
     
