@@ -79,6 +79,47 @@ def log_edit_action(contact_id, contact_name, browser_name=''):
         except pymysql.Error as e:
             print(f"❌ خطا در ثبت لاگ: {e}")
 
+# تابع ساده برای ثبت لاگ اضافه کردن مخاطب
+def log_add_action(contact_id, contact_name, browser_name=''):
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            
+            # دریافت آی‌پی کاربر
+            user_ip = request.remote_addr
+            if 'X-Forwarded-For' in request.headers:
+                user_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+            elif 'X-Real-IP' in request.headers:
+                user_ip = request.headers.get('X-Real-IP')
+            
+            # دریافت نوع مرورگر از User-Agent
+            user_agent = request.headers.get('User-Agent', '')
+            if not browser_name:
+                if 'Chrome' in user_agent and 'Edg' not in user_agent:
+                    browser_name = 'Chrome'
+                elif 'Firefox' in user_agent:
+                    browser_name = 'Firefox'
+                elif 'Edg' in user_agent:
+                    browser_name = 'Edge'
+                elif 'Safari' in user_agent and 'Chrome' not in user_agent:
+                    browser_name = 'Safari'
+                else:
+                    browser_name = 'نامشخص'
+            
+            # ثبت لاگ اضافه کردن
+            cursor.execute('''
+                INSERT INTO logs (contact_id, action, ip_address, user_agent, computer_name, additional_info) 
+                VALUES (%s, %s, %s, %s, %s, %s)
+            ''', (contact_id, 'add', user_ip, user_agent, browser_name, f'اضافه کردن مخاطب جدید: {contact_name}'))
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print(f"✅ لاگ اضافه کردن ثبت شد: {contact_name} - آی‌پی: {user_ip} - مرورگر: {browser_name}")
+        except pymysql.Error as e:
+            print(f"❌ خطا در ثبت لاگ اضافه کردن: {e}")
+
 
 
 # تابع برای ایجاد جداول در صورت عدم وجود
@@ -456,7 +497,7 @@ def view_logs():
             SELECT logs.*, contacts.full_name
             FROM logs
             LEFT JOIN contacts ON logs.contact_id = contacts.id
-            WHERE logs.action = 'edit'
+            WHERE logs.action IN ('edit', 'add')
             ORDER BY logs.timestamp DESC
             LIMIT 100
         ''')
@@ -464,13 +505,16 @@ def view_logs():
         cursor.close()
         conn.close()
         
-        # محاسبه آمار - فقط ویرایش‌ها
+        # محاسبه آمار - ویرایش‌ها و اضافه کردن‌ها
         total_logs = len(logs)
+        edit_count = sum(1 for log in logs if log['action'] == 'edit')
+        add_count = sum(1 for log in logs if log['action'] == 'add')
         unique_computers = len(set(log['computer_name'] for log in logs if log['computer_name']))
         
         stats = {
             'total_logs': total_logs,
-            'edit_count': total_logs,  # همه لاگ‌ها ویرایش هستند
+            'edit_count': edit_count,
+            'add_count': add_count,
             'unique_computers': unique_computers
         }
         
@@ -479,10 +523,70 @@ def view_logs():
         print(f"خطا در خواندن لاگ‌ها: {e}")
         return "خطا در خواندن لاگ‌ها", 500
 
-# مسیر افزودن مخاطب غیرفعال شده است
+# افزودن مخاطب جدید
 @app.route('/add', methods=('GET', 'POST'))
 def add():
-    return "افزودن مخاطب جدید غیرفعال است.", 403
+    # بررسی مجوز اضافه کردن مخاطب
+    if not user_can_edit():
+        return "شما مجوز اضافه کردن مخاطب جدید را ندارید.", 403
+    
+    if request.method == 'POST':
+        full_name = request.form['full_name']
+        phone = request.form['phone']
+        position = request.form.get('position', '')
+        department = request.form.get('department', '')
+        location = request.form.get('location', '')
+        
+        # بررسی اینکه فیلدهای ضروری پر شده باشند
+        if not full_name or not phone:
+            flash('نام کامل و شماره تلفن الزامی است.', 'error')
+            return render_template('add.html')
+        
+        # بررسی تکراری نبودن شماره تلفن
+        conn = get_db_connection()
+        if not conn:
+            flash('خطا در اتصال به دیتابیس', 'error')
+            return render_template('add.html')
+        
+        cursor = None
+        try:
+            cursor = conn.cursor()
+            cursor.execute('SELECT COUNT(*) FROM contacts WHERE phone = %s', (phone,))
+            result = cursor.fetchone()
+            if result and result[0] > 0:
+                flash('این شماره تلفن قبلاً ثبت شده است.', 'error')
+                cursor.close()
+                conn.close()
+                return render_template('add.html')
+            
+            # اضافه کردن مخاطب جدید
+            cursor.execute('''
+                INSERT INTO contacts (full_name, phone, position, department, location)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (full_name, phone, position, department, location))
+            
+            # دریافت ID مخاطب جدید
+            new_contact_id = cursor.lastrowid
+            
+            # ثبت لاگ اضافه کردن
+            log_add_action(new_contact_id, full_name)
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            flash(f'مخاطب "{full_name}" با موفقیت اضافه شد.', 'success')
+            return redirect(url_for('index'))
+            
+        except pymysql.Error as e:
+            print(f"خطا در اضافه کردن مخاطب: {e}")
+            flash('خطا در اضافه کردن مخاطب. لطفاً دوباره تلاش کنید.', 'error')
+            if cursor:
+                cursor.close()
+            conn.close()
+            return render_template('add.html')
+    
+    return render_template('add.html')
 
 if __name__ == '__main__':
     # تنظیمات برای محیط تولید

@@ -168,6 +168,55 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
+        /* کانتینر جستجو و دکمه اضافه کردن */
+        .search-add-container {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .search-add-container #search {
+            flex: 1;
+            margin: 0;
+        }
+
+        .add-contact-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 15px 25px;
+            border-radius: 12px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+        }
+
+        .add-contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .add-contact-btn .material-icons {
+            font-size: 20px;
+        }
+
+        /* ریسپانسیو */
+        @media (max-width: 768px) {
+            .search-add-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .add-contact-btn {
+                justify-content: center;
+            }
+        }
+
         /* جدول */
         table {
             width: 100%;
@@ -330,8 +379,16 @@
             </div>
         </header>
 
-        <!-- فیلد جستجو -->
-        <input type="text" id="search" placeholder="جستجو...">
+        <!-- فیلد جستجو و دکمه اضافه کردن -->
+        <div class="search-add-container">
+            <input type="text" id="search" placeholder="جستجو...">
+            {% if user_can_edit %}
+                <a href="{{ url_for('add') }}" class="add-contact-btn">
+                    <i class="material-icons">add</i>
+                    اضافه کردن مخاطب
+                </a>
+            {% endif %}
+        </div>
 
         <!-- جدول مخاطبین -->
         <table id="contactsTable">
