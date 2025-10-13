@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, make_response, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, make_response
 from flask_wtf import CSRFProtect
 import pymysql
 import os
@@ -8,7 +8,7 @@ import json
 import socket
 from datetime import datetime, timedelta
 import gzip
-import time
+import io
 
 # بارگذاری متغیرهای محیطی از فایل .env
 load_dotenv()
@@ -27,7 +27,66 @@ menu_cache = {
 
 CACHE_TIMEOUT = 300  # 5 دقیقه
 
-# تنظیمات دیتابیس MySQL بهینه شده از فایل .env
+# تابع برای اضافه کردن cach        return render_template('add.html')
+
+# API برای دریافت سریع مخاطبین (JSON)
+@app.route('/api/contacts')
+def api_contacts():
+    conn = get_db_connection()
+    if not conn:
+        return {'error': 'خطا در اتصال به دیتابیس'}, 500
+    
+    try:
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
+        cursor.execute('''
+            SELECT id, full_name, phone, position, department, location 
+            FROM contacts 
+            ORDER BY CAST(phone AS UNSIGNED) ASC
+        ''')
+        contacts = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return {'contacts': contacts, 'count': len(contacts)}
+    except pymysql.Error as e:
+        print(f"خطا در خواندن داده‌ها: {e}")
+        return {'error': 'خطا در خواندن داده‌ها'}, 500
+
+if __name__ == '__main__':eaders و compression
+@app.after_request
+def add_cache_headers(response):
+    # اضافه کردن cache headers
+    if request.endpoint == 'static':
+        # برای فایل‌های استاتیک کش یک روزه
+        response.cache_control.max_age = 86400  # 1 روز
+        response.cache_control.public = True
+    elif request.endpoint == 'index':
+        # برای صفحه اصلی کش 5 دقیقه‌ای
+        response.cache_control.max_age = 300  # 5 دقیقه
+        response.cache_control.public = True
+    
+    # کمپرشن
+    response.headers['Vary'] = 'Accept-Encoding'
+    
+    # Gzip compression برای HTML/CSS/JS
+    if (response.content_type.startswith('text/') or 
+        response.content_type == 'application/json'):
+        
+        # بررسی پشتیبانی gzip در مرورگر
+        accept_encoding = request.headers.get('Accept-Encoding', '')
+        if 'gzip' in accept_encoding and len(response.data) > 500:
+            try:
+                # فشرده‌سازی داده‌ها
+                gzipped_data = gzip.compress(response.data)
+                response.data = gzipped_data
+                response.headers['Content-Encoding'] = 'gzip'
+                response.headers['Content-Length'] = len(gzipped_data)
+            except:
+                pass
+    
+    return response
+
+# تنظیمات دیتابیس MySQL از فایل .env
 DB_CONFIG = {
     'host': os.getenv('DB_HOST'),
     'user': os.getenv('DB_USER'),
@@ -41,7 +100,7 @@ DB_CONFIG = {
     'write_timeout': 10
 }
 
-# تابع برای اتصال به دیتابیس MySQL بهینه شده
+# تابع برای اتصال به دیتابیس MySQL
 def get_db_connection():
     try:
         conn = pymysql.connect(**DB_CONFIG)
@@ -50,7 +109,9 @@ def get_db_connection():
         print(f"خطا در اتصال به دیتابیس: {e}")
         return None
 
-# تابع بهینه شده برای ثبت لاگ ویرایش
+
+
+# تابع ساده برای ثبت لاگ ویرایش
 def log_edit_action(contact_id, contact_name, browser_name=''):
     conn = get_db_connection()
     if conn:
@@ -58,11 +119,10 @@ def log_edit_action(contact_id, contact_name, browser_name=''):
             cursor = conn.cursor()
             
             # دریافت آی‌پی کاربر
-            user_ip = request.remote_addr or '127.0.0.1'
-            forwarded_header = request.headers.get('X-Forwarded-For')
-            if forwarded_header:
-                user_ip = forwarded_header.split(',')[0].strip()
-            elif request.headers.get('X-Real-IP'):
+            user_ip = request.remote_addr
+            if 'X-Forwarded-For' in request.headers:
+                user_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+            elif 'X-Real-IP' in request.headers:
                 user_ip = request.headers.get('X-Real-IP')
             
             # دریافت نوع مرورگر از User-Agent
@@ -92,7 +152,7 @@ def log_edit_action(contact_id, contact_name, browser_name=''):
         except pymysql.Error as e:
             print(f"❌ خطا در ثبت لاگ: {e}")
 
-# تابع بهینه شده برای ثبت لاگ اضافه کردن مخاطب
+# تابع ساده برای ثبت لاگ اضافه کردن مخاطب
 def log_add_action(contact_id, contact_name, browser_name=''):
     conn = get_db_connection()
     if conn:
@@ -100,11 +160,10 @@ def log_add_action(contact_id, contact_name, browser_name=''):
             cursor = conn.cursor()
             
             # دریافت آی‌پی کاربر
-            user_ip = request.remote_addr or '127.0.0.1'
-            forwarded_header = request.headers.get('X-Forwarded-For')
-            if forwarded_header:
-                user_ip = forwarded_header.split(',')[0].strip()
-            elif request.headers.get('X-Real-IP'):
+            user_ip = request.remote_addr
+            if 'X-Forwarded-For' in request.headers:
+                user_ip = request.headers.get('X-Forwarded-For').split(',')[0].strip()
+            elif 'X-Real-IP' in request.headers:
                 user_ip = request.headers.get('X-Real-IP')
             
             # دریافت نوع مرورگر از User-Agent
@@ -134,7 +193,9 @@ def log_add_action(contact_id, contact_name, browser_name=''):
         except pymysql.Error as e:
             print(f"❌ خطا در ثبت لاگ اضافه کردن: {e}")
 
-# تابع ایجاد دیتابیس و جداول
+
+
+# تابع برای ایجاد جداول در صورت عدم وجود
 def init_database():
     conn = get_db_connection()
     if conn:
@@ -149,13 +210,11 @@ def init_database():
                     phone VARCHAR(50) UNIQUE NOT NULL,
                     position VARCHAR(255),
                     department VARCHAR(255),
-                    location VARCHAR(255),
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                    location VARCHAR(255)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ''')
             
-            # ایجاد جدول logs
+            # ایجاد جدول logs با ستون‌های جدید
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS logs (
                     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -169,6 +228,22 @@ def init_database():
                     FOREIGN KEY (contact_id) REFERENCES contacts (id) ON DELETE SET NULL
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
             ''')
+            
+            # بررسی و اضافه کردن ستون‌های جدید اگر وجود ندارند
+            try:
+                cursor.execute("ALTER TABLE logs ADD COLUMN user_agent TEXT")
+            except:
+                pass  # ستون از قبل موجود است
+            
+            try:
+                cursor.execute("ALTER TABLE logs ADD COLUMN computer_name VARCHAR(255)")
+            except:
+                pass  # ستون از قبل موجود است
+                
+            try:
+                cursor.execute("ALTER TABLE logs ADD COLUMN additional_info TEXT")
+            except:
+                pass  # ستون از قبل موجود است
             
             # ایجاد جدول admin_settings
             cursor.execute('''
@@ -196,15 +271,13 @@ def init_database():
             
             # اضافه کردن پسورد پیش‌فرض ادمین اگر وجود ندارد
             cursor.execute("SELECT COUNT(*) FROM admin_settings WHERE setting_key = 'admin_password'")
-            result = cursor.fetchone()
-            if result and result['COUNT(*)'] == 0:
+            if cursor.fetchone()[0] == 0:
                 default_password = hashlib.sha256('admin123'.encode()).hexdigest()
                 cursor.execute("INSERT INTO admin_settings (setting_key, setting_value) VALUES ('admin_password', %s)", (default_password,))
             
             # اضافه کردن آیتم‌های منوی پیش‌فرض
             cursor.execute("SELECT COUNT(*) FROM menu_items")
-            result = cursor.fetchone()
-            if result and result['COUNT(*)'] == 0:
+            if cursor.fetchone()[0] == 0:
                 default_menu_items = [
                     ('حضور و غیاب', '#', 'clock', 1, 1),
                     ('اتوماسیون اداری', '#', 'briefcase', 1, 2),
@@ -227,7 +300,7 @@ def init_database():
 # اجرای تابع ایجاد دیتابیس در ابتدای برنامه
 init_database()
 
-# تابع بهینه شده برای بررسی مجوز ویرایش بر اساس آی‌پی کاربر
+# تابع برای بررسی مجوز ویرایش بر اساس آی‌پی کاربر
 def user_can_edit():
     # آی‌پی‌های مجاز شامل محیط Docker
     allowed_ips = [
@@ -238,16 +311,17 @@ def user_can_edit():
         '172.21.0.3',      # آی‌پی داخلی Docker
         '::1'              # IPv6 localhost
     ]
-    user_ip = request.remote_addr or '127.0.0.1'
+    user_ip = request.remote_addr
     
     # بررسی آی‌پی‌های شبکه Docker (172.x.x.x)
-    if user_ip and (user_ip.startswith('172.') or user_ip.startswith('192.168.')):
+    if user_ip.startswith('172.') or user_ip.startswith('192.168.'):
         return True
     
     return user_ip in allowed_ips
 
-# تابع بهینه شده برای دریافت آیتم‌های منو با کش
+# تابع برای دریافت آیتم‌های منو با کش
 def get_menu_items():
+    import time
     current_time = time.time()
     
     # بررسی کش
@@ -279,22 +353,7 @@ def get_menu_items():
 def check_admin_auth():
     return session.get('admin_logged_in', False)
 
-# تابع برای اضافه کردن cache headers
-@app.after_request
-def add_cache_headers(response):
-    # اضافه کردن cache headers
-    if request.endpoint == 'static':
-        # برای فایل‌های استاتیک کش یک روزه
-        response.cache_control.max_age = 86400  # 1 روز
-        response.cache_control.public = True
-    elif request.endpoint == 'index':
-        # برای صفحه اصلی کش 5 دقیقه‌ای
-        response.cache_control.max_age = 300  # 5 دقیقه
-        response.cache_control.public = True
-    
-    return response
-
-# صفحه اصلی بهینه شده: نمایش لیست مخاطبین
+# صفحه اصلی: نمایش لیست مخاطبین با مرتب‌سازی شماره تلفن از کم به زیاد
 @app.route('/')
 def index():
     conn = get_db_connection()
@@ -323,29 +382,6 @@ def index():
         print(f"خطا در خواندن داده‌ها: {e}")
         return "خطا در خواندن داده‌ها", 500
 
-# API بهینه شده برای دریافت سریع مخاطبین (JSON)
-@app.route('/api/contacts')
-def api_contacts():
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'خطا در اتصال به دیتابیس'}), 500
-    
-    try:
-        cursor = conn.cursor(pymysql.cursors.DictCursor)
-        cursor.execute('''
-            SELECT id, full_name, phone, position, department, location 
-            FROM contacts 
-            ORDER BY CAST(phone AS UNSIGNED) ASC
-        ''')
-        contacts = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({'contacts': contacts, 'count': len(contacts)})
-    except pymysql.Error as e:
-        print(f"خطا در خواندن داده‌ها: {e}")
-        return jsonify({'error': 'خطا در خواندن داده‌ها'}), 500
-
 # ورود ادمین
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -363,7 +399,7 @@ def admin_login():
                     cursor.close()
                     conn.close()
                     
-                    if stored_password and stored_password['setting_value'] == hashed_password:
+                    if stored_password and stored_password[0] == hashed_password:
                         session['admin_logged_in'] = True
                         flash('با موفقیت وارد شدید', 'success')
                         return redirect(url_for('admin_settings'))
@@ -428,6 +464,72 @@ def admin_settings():
     
     return render_template('admin_settings.html', menu_items=menu_items)
 
+# مدیریت آیتم‌های منو
+@app.route('/admin/menu', methods=['POST'])
+def admin_menu():
+    if not check_admin_auth():
+        return redirect(url_for('admin_login'))
+    
+    action = request.form.get('action')
+    conn = get_db_connection()
+    
+    if not conn:
+        flash('خطا در اتصال به دیتابیس', 'error')
+        return redirect(url_for('admin_settings'))
+    
+    try:
+        cursor = conn.cursor()
+        
+        if action == 'add':
+            title = request.form.get('title')
+            url = request.form.get('url')
+            icon = request.form.get('icon')
+            
+            if title and url:
+                cursor.execute("INSERT INTO menu_items (title, url, icon, is_active, sort_order) VALUES (%s, %s, %s, 1, (SELECT COALESCE(MAX(sort_order), 0) + 1 FROM menu_items m))", (title, url, icon))
+                flash('آیتم منو اضافه شد', 'success')
+            else:
+                flash('عنوان و لینک الزامی است', 'error')
+        
+        elif action == 'edit':
+            item_id = request.form.get('item_id')
+            title = request.form.get('title')
+            url = request.form.get('url')
+            icon = request.form.get('icon')
+            is_active = 1 if request.form.get('is_active') else 0
+            
+            if item_id and title and url:
+                cursor.execute("UPDATE menu_items SET title = %s, url = %s, icon = %s, is_active = %s WHERE id = %s", (title, url, icon, is_active, item_id))
+                flash('آیتم منو ویرایش شد', 'success')
+            else:
+                flash('اطلاعات کامل نیست', 'error')
+        
+        elif action == 'delete':
+            item_id = request.form.get('item_id')
+            if item_id:
+                cursor.execute("DELETE FROM menu_items WHERE id = %s", (item_id,))
+                flash('آیتم منو حذف شد', 'success')
+        
+        elif action == 'reorder':
+            item_ids = request.form.getlist('item_order[]')
+            for index, item_id in enumerate(item_ids):
+                cursor.execute("UPDATE menu_items SET sort_order = %s WHERE id = %s", (index + 1, item_id))
+            flash('ترتیب منو تغییر کرد', 'success')
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+    except pymysql.Error as e:
+        flash('خطا در عملیات', 'error')
+        print(f"خطا در مدیریت منو: {e}")
+    
+    return redirect(url_for('admin_settings'))
+
+
+
+
+
 # ویرایش مخاطب
 @app.route('/edit/<int:id>', methods=('GET', 'POST'))
 def edit(id):
@@ -440,7 +542,7 @@ def edit(id):
         cursor.execute('SELECT * FROM contacts WHERE id = %s', (id,))
         contact = cursor.fetchone()
 
-        if request.method == 'POST' and contact:
+        if request.method == 'POST':
             full_name = request.form['full_name']
             phone = contact['phone']  # شماره تلفن از دیتابیس گرفته می‌شود و نمی‌توان آن را تغییر داد
             position = request.form.get('position')
@@ -471,71 +573,6 @@ def edit(id):
     except pymysql.Error as e:
         print(f"خطا در ویرایش مخاطب: {e}")
         return "خطا در ویرایش مخاطب", 500
-
-# افزودن مخاطب جدید
-@app.route('/add', methods=('GET', 'POST'))
-def add():
-    # بررسی مجوز اضافه کردن مخاطب
-    if not user_can_edit():
-        return "شما مجوز اضافه کردن مخاطب جدید را ندارید.", 403
-    
-    if request.method == 'POST':
-        full_name = request.form['full_name']
-        phone = request.form['phone']
-        position = request.form.get('position', '')
-        department = request.form.get('department', '')
-        location = request.form.get('location', '')
-        
-        # بررسی اینکه فیلدهای ضروری پر شده باشند
-        if not full_name or not phone:
-            flash('نام کامل و شماره تلفن الزامی است.', 'error')
-            return render_template('add.html')
-        
-        # بررسی تکراری نبودن شماره تلفن
-        conn = get_db_connection()
-        if not conn:
-            flash('خطا در اتصال به دیتابیس', 'error')
-            return render_template('add.html')
-        
-        cursor = None
-        try:
-            cursor = conn.cursor()
-            cursor.execute('SELECT COUNT(*) FROM contacts WHERE phone = %s', (phone,))
-            result = cursor.fetchone()
-            if result and result['COUNT(*)'] > 0:
-                flash('این شماره تلفن قبلاً ثبت شده است.', 'error')
-                cursor.close()
-                conn.close()
-                return render_template('add.html')
-            
-            # اضافه کردن مخاطب جدید
-            cursor.execute('''
-                INSERT INTO contacts (full_name, phone, position, department, location)
-                VALUES (%s, %s, %s, %s, %s)
-            ''', (full_name, phone, position, department, location))
-            
-            # دریافت ID مخاطب جدید
-            new_contact_id = cursor.lastrowid
-            
-            # ثبت لاگ اضافه کردن
-            log_add_action(new_contact_id, full_name)
-            
-            conn.commit()
-            cursor.close()
-            conn.close()
-            
-            flash(f'مخاطب "{full_name}" با موفقیت اضافه شد.', 'success')
-            return redirect(url_for('index'))
-            
-        except pymysql.Error as e:
-            print(f"خطا در اضافه کردن مخاطب: {e}")
-            flash('خطا در اضافه کردن مخاطب. لطفاً دوباره تلاش کنید.', 'error')
-            if cursor:
-                cursor.close()
-            conn.close()
-            return render_template('add.html')
-    
-    return render_template('add.html')
 
 # نمایش لاگ‌ها - فقط برای ادمین
 @app.route('/admin/logs')
@@ -578,6 +615,71 @@ def view_logs():
     except pymysql.Error as e:
         print(f"خطا در خواندن لاگ‌ها: {e}")
         return "خطا در خواندن لاگ‌ها", 500
+
+# افزودن مخاطب جدید
+@app.route('/add', methods=('GET', 'POST'))
+def add():
+    # بررسی مجوز اضافه کردن مخاطب
+    if not user_can_edit():
+        return "شما مجوز اضافه کردن مخاطب جدید را ندارید.", 403
+    
+    if request.method == 'POST':
+        full_name = request.form['full_name']
+        phone = request.form['phone']
+        position = request.form.get('position', '')
+        department = request.form.get('department', '')
+        location = request.form.get('location', '')
+        
+        # بررسی اینکه فیلدهای ضروری پر شده باشند
+        if not full_name or not phone:
+            flash('نام کامل و شماره تلفن الزامی است.', 'error')
+            return render_template('add.html')
+        
+        # بررسی تکراری نبودن شماره تلفن
+        conn = get_db_connection()
+        if not conn:
+            flash('خطا در اتصال به دیتابیس', 'error')
+            return render_template('add.html')
+        
+        cursor = None
+        try:
+            cursor = conn.cursor()
+            cursor.execute('SELECT COUNT(*) FROM contacts WHERE phone = %s', (phone,))
+            result = cursor.fetchone()
+            if result and result[0] > 0:
+                flash('این شماره تلفن قبلاً ثبت شده است.', 'error')
+                cursor.close()
+                conn.close()
+                return render_template('add.html')
+            
+            # اضافه کردن مخاطب جدید
+            cursor.execute('''
+                INSERT INTO contacts (full_name, phone, position, department, location)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (full_name, phone, position, department, location))
+            
+            # دریافت ID مخاطب جدید
+            new_contact_id = cursor.lastrowid
+            
+            # ثبت لاگ اضافه کردن
+            log_add_action(new_contact_id, full_name)
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            flash(f'مخاطب "{full_name}" با موفقیت اضافه شد.', 'success')
+            return redirect(url_for('index'))
+            
+        except pymysql.Error as e:
+            print(f"خطا در اضافه کردن مخاطب: {e}")
+            flash('خطا در اضافه کردن مخاطب. لطفاً دوباره تلاش کنید.', 'error')
+            if cursor:
+                cursor.close()
+            conn.close()
+            return render_template('add.html')
+    
+    return render_template('add.html')
 
 if __name__ == '__main__':
     # تنظیمات برای محیط تولید

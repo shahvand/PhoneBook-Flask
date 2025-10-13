@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>شبکه آفتاب</title>
-    <!-- آیکون‌های Material Design -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- آیکون‌های Material Design - بارگذاری async -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>  
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons&display=swap" rel="stylesheet" media="print" onload="this.media='all'"">
     <!-- افزودن متا تگ CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <!-- لینک به CKEditor 5 -->
-    <script src="https://cdn.ckeditor.com/ckeditor5/36.0.1/classic/ckeditor.js"></script>
     <style>
         @font-face {
             font-family: 'Vazirmatn';
@@ -368,7 +368,7 @@
         <!-- هدر با ساعت دیجیتال و لوگو در کنار هم -->
         <header>
             <div class="clock-logo-container">
-                <img src="/static/logo.png" alt="لوگو">
+                <img src="/static/logo.png" alt="لوگو" loading="eager">
                 <div class="clock">
                     <div class="date" id="date"></div>
                     <div class="time" id="time"></div>
@@ -629,11 +629,6 @@
 
         </script>
     </div>
-    
-    <!-- Feather Icons -->
-    <script src="https://unpkg.com/feather-icons"></script>
-    <script>
-        feather.replace();
-    </script>
+
 </body>
 </html>

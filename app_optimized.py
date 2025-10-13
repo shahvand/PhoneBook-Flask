@@ -279,7 +279,7 @@ def get_menu_items():
 def check_admin_auth():
     return session.get('admin_logged_in', False)
 
-# تابع برای اضافه کردن cache headers
+# تابع برای اضافه کردن cache headers و compression
 @app.after_request
 def add_cache_headers(response):
     # اضافه کردن cache headers
@@ -291,6 +291,25 @@ def add_cache_headers(response):
         # برای صفحه اصلی کش 5 دقیقه‌ای
         response.cache_control.max_age = 300  # 5 دقیقه
         response.cache_control.public = True
+    
+    # کمپرشن
+    response.headers['Vary'] = 'Accept-Encoding'
+    
+    # Gzip compression برای HTML/CSS/JS
+    if (response.content_type.startswith('text/') or 
+        response.content_type == 'application/json'):
+        
+        # بررسی پشتیبانی gzip در مرورگر
+        accept_encoding = request.headers.get('Accept-Encoding', '')
+        if 'gzip' in accept_encoding and len(response.data) > 500:
+            try:
+                # فشرده‌سازی داده‌ها
+                gzipped_data = gzip.compress(response.data)
+                response.data = gzipped_data
+                response.headers['Content-Encoding'] = 'gzip'
+                response.headers['Content-Length'] = len(gzipped_data)
+            except:
+                pass
     
     return response
 

@@ -309,6 +309,8 @@
                             <span class="action-badge action-{{ log['action'] }}">
                                 {% if log['action'] == 'edit' %}
                                     ویرایش
+                                {% elif log['action'] == 'add' %}
+                                    اضافه کردن
                                 {% elif log['action'] == 'admin_login' %}
                                     ورود ادمین
                                 {% elif log['action'] == 'admin_logout' %}
