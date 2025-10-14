@@ -235,6 +235,10 @@ init_database()
 
 # تابع برای بررسی مجوز ویرایش - همه کاربران مجاز هستند
 def user_can_edit():
+    # لاگ برای دیباگ Docker
+    user_ip = request.remote_addr or '127.0.0.1'
+    print(f"🔍 user_can_edit called: IP={user_ip}, returning True")
+    
     # همه کاربران می‌توانند مخاطب اضافه کنند و ویرایش کنند
     return True
     
@@ -346,6 +350,10 @@ def index():
         
         # محاسبه can_edit یکبار (همه کاربران مجاز هستند)
         can_edit = user_can_edit()
+        user_ip = request.remote_addr or '127.0.0.1'
+        
+        # لاگ مهم برای دیباگ Docker
+        print(f"🔍 DEBUG: IP={user_ip}, can_edit={can_edit}, contacts_count={len(contacts)}")
         
         # دریافت منو از کش
         menu_items = get_menu_items()
@@ -412,6 +420,12 @@ def debug_permissions():
     }
     
     return jsonify(debug_info)
+
+# تست ساده برای دیباگ
+@app.route('/test')
+def test():
+    can_edit = user_can_edit()
+    return f"<h1>Test Page</h1><p>can_edit: {can_edit}</p><p>IP: {request.remote_addr}</p><a href='/'>Back to Home</a>"
 
 # ورود ادمین
 @app.route('/admin/login', methods=['GET', 'POST'])
