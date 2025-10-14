@@ -425,7 +425,12 @@ def debug_permissions():
 @app.route('/test')
 def test():
     can_edit = user_can_edit()
-    return f"<h1>Test Page</h1><p>can_edit: {can_edit}</p><p>IP: {request.remote_addr}</p><a href='/'>Back to Home</a>"
+    return f"<h1>Test Page - Version 2.0</h1><p>can_edit: {can_edit}</p><p>IP: {request.remote_addr}</p><p>Time: {datetime.now()}</p><a href='/'>Back to Home</a>"
+
+# صفحه ساده برای تست اینکه آیا کد جدید اجرا شده
+@app.route('/version')
+def version():
+    return "<h1>PhoneBook Version 2.0 - Updated Code Running!</h1><p>If you see this, the new code is working.</p>"
 
 # ورود ادمین
 @app.route('/admin/login', methods=['GET', 'POST'])
