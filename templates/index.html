@@ -382,12 +382,11 @@
         <!-- فیلد جستجو و دکمه اضافه کردن -->
         <div class="search-add-container">
             <input type="text" id="search" placeholder="جستجو...">
-            {% if user_can_edit %}
-                <a href="{{ url_for('add') }}" class="add-contact-btn">
-                    <i class="material-icons">add</i>
-                    اضافه کردن مخاطب
-                </a>
-            {% endif %}
+            <!-- دکمه اضافه کردن مخاطب - همه کاربران مجاز هستند -->
+            <a href="{{ url_for('add') }}" class="add-contact-btn">
+                <i class="material-icons">add</i>
+                اضافه کردن مخاطب
+            </a>
         </div>
 
         <!-- جدول مخاطبین -->

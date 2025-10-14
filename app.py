@@ -201,6 +201,12 @@ def init_database():
                 default_password = hashlib.sha256('admin123'.encode()).hexdigest()
                 cursor.execute("INSERT INTO admin_settings (setting_key, setting_value) VALUES ('admin_password', %s)", (default_password,))
             
+            # اضافه کردن تنظیم محدودیت آی‌پی (پیش‌فرض: فعال = 1, غیرفعال = 0)
+            cursor.execute("SELECT COUNT(*) FROM admin_settings WHERE setting_key = 'ip_restriction_enabled'")
+            result = cursor.fetchone()
+            if result and result['COUNT(*)'] == 0:
+                cursor.execute("INSERT INTO admin_settings (setting_key, setting_value) VALUES ('ip_restriction_enabled', '0')")
+            
             # اضافه کردن آیتم‌های منوی پیش‌فرض
             cursor.execute("SELECT COUNT(*) FROM menu_items")
             result = cursor.fetchone()
@@ -227,8 +233,33 @@ def init_database():
 # اجرای تابع ایجاد دیتابیس در ابتدای برنامه
 init_database()
 
-# تابع بهینه شده برای بررسی مجوز ویرایش بر اساس آی‌پی کاربر
+# تابع برای بررسی مجوز ویرایش - همه کاربران مجاز هستند
 def user_can_edit():
+    # همه کاربران می‌توانند مخاطب اضافه کنند و ویرایش کنند
+    return True
+    
+    # بررسی متغیر محیطی برای غیرفعال کردن محدودیت آی‌پی
+    disable_ip_restriction = os.getenv('DISABLE_IP_RESTRICTION', 'false').lower() == 'true'
+    if disable_ip_restriction:
+        return True
+    
+    # بررسی تنظیمات ادمین برای فعال/غیرفعال بودن محدودیت آی‌پی
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+            cursor.execute("SELECT setting_value FROM admin_settings WHERE setting_key = 'ip_restriction_enabled'")
+            ip_restriction_result = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            # اگر محدودیت آی‌پی غیرفعال باشد، همه کاربران می‌توانند ویرایش کنند
+            if ip_restriction_result and ip_restriction_result['setting_value'] == '0':
+                return True
+                
+        except pymysql.Error as e:
+            print(f"خطا در بررسی تنظیمات آی‌پی: {e}")
+    
     # آی‌پی‌های مجاز شامل محیط Docker
     allowed_ips = [
         '192.168.202.12', 
@@ -313,8 +344,9 @@ def index():
         cursor.close()
         conn.close()
         
-        # محاسبه can_edit یکبار
+        # محاسبه can_edit یکبار (همه کاربران مجاز هستند)
         can_edit = user_can_edit()
+        
         # دریافت منو از کش
         menu_items = get_menu_items()
         
@@ -345,6 +377,41 @@ def api_contacts():
     except pymysql.Error as e:
         print(f"خطا در خواندن داده‌ها: {e}")
         return jsonify({'error': 'خطا در خواندن داده‌ها'}), 500
+
+# تست endpoint برای دیباگ مشکل دکمه اضافه کردن
+@app.route('/debug/permissions')
+def debug_permissions():
+    user_ip = request.remote_addr or '127.0.0.1'
+    can_edit = user_can_edit()
+    disable_ip_restriction = os.getenv('DISABLE_IP_RESTRICTION', 'false').lower()
+    
+    # بررسی تنظیمات دیتابیس
+    db_setting = None
+    conn = get_db_connection()
+    if conn:
+        try:
+            cursor = conn.cursor(pymysql.cursors.DictCursor)
+            cursor.execute("SELECT setting_value FROM admin_settings WHERE setting_key = 'ip_restriction_enabled'")
+            result = cursor.fetchone()
+            if result:
+                db_setting = result['setting_value']
+            cursor.close()
+            conn.close()
+        except:
+            pass
+    
+    debug_info = {
+        'user_ip': user_ip,
+        'can_edit': can_edit,
+        'env_disable_ip_restriction': disable_ip_restriction,
+        'db_ip_restriction_enabled': db_setting,
+        'headers': dict(request.headers),
+        'remote_addr': request.remote_addr,
+        'forwarded_for': request.headers.get('X-Forwarded-For'),
+        'real_ip': request.headers.get('X-Real-IP')
+    }
+    
+    return jsonify(debug_info)
 
 # ورود ادمین
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -412,21 +479,48 @@ def admin_settings():
                         flash('خطا در تغییر پسورد', 'error')
             else:
                 flash('پسوردها مطابقت ندارند', 'error')
+        
+        elif action == 'toggle_ip_restriction':
+            ip_restriction = '1' if request.form.get('ip_restriction') else '0'
+            
+            conn = get_db_connection()
+            if conn:
+                try:
+                    cursor = conn.cursor()
+                    cursor.execute("UPDATE admin_settings SET setting_value = %s WHERE setting_key = 'ip_restriction_enabled'", (ip_restriction,))
+                    if cursor.rowcount == 0:
+                        cursor.execute("INSERT INTO admin_settings (setting_key, setting_value) VALUES ('ip_restriction_enabled', %s)", (ip_restriction,))
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+                    status = 'فعال' if ip_restriction == '1' else 'غیرفعال'
+                    flash(f'محدودیت آی‌پی {status} شد', 'success')
+                except pymysql.Error as e:
+                    flash('خطا در تغییر تنظیمات', 'error')
     
-    # دریافت آیتم‌های منو برای نمایش
+    # دریافت آیتم‌های منو و تنظیمات برای نمایش
     conn = get_db_connection()
     menu_items = []
+    ip_restriction_enabled = True  # پیش‌فرض فعال
+    
     if conn:
         try:
             cursor = conn.cursor(pymysql.cursors.DictCursor)
             cursor.execute('SELECT * FROM menu_items ORDER BY sort_order')
             menu_items = cursor.fetchall()
+            
+            # دریافت تنظیم محدودیت آی‌پی
+            cursor.execute("SELECT setting_value FROM admin_settings WHERE setting_key = 'ip_restriction_enabled'")
+            ip_restriction_result = cursor.fetchone()
+            if ip_restriction_result:
+                ip_restriction_enabled = ip_restriction_result['setting_value'] == '1'
+            
             cursor.close()
             conn.close()
         except pymysql.Error as e:
-            print(f"خطا در خواندن منو: {e}")
+            print(f"خطا در خواندن تنظیمات: {e}")
     
-    return render_template('admin_settings.html', menu_items=menu_items)
+    return render_template('admin_settings.html', menu_items=menu_items, ip_restriction_enabled=ip_restriction_enabled)
 
 # ویرایش مخاطب
 @app.route('/edit/<int:id>', methods=('GET', 'POST'))
@@ -472,12 +566,10 @@ def edit(id):
         print(f"خطا در ویرایش مخاطب: {e}")
         return "خطا در ویرایش مخاطب", 500
 
-# افزودن مخاطب جدید
+# افزودن مخاطب جدید - همه کاربران مجاز هستند
 @app.route('/add', methods=('GET', 'POST'))
 def add():
-    # بررسی مجوز اضافه کردن مخاطب
-    if not user_can_edit():
-        return "شما مجوز اضافه کردن مخاطب جدید را ندارید.", 403
+    # همه کاربران می‌توانند مخاطب جدید اضافه کنند
     
     if request.method == 'POST':
         full_name = request.form['full_name']

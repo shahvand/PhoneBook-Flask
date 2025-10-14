@@ -284,6 +284,31 @@
                     <button type="submit" class="btn btn-primary">تغییر پسورد</button>
                 </form>
             </div>
+
+            <!-- تنظیمات دسترسی -->
+            <div class="settings-card">
+                <div class="card-header">
+                    <h2>🔒 تنظیمات دسترسی</h2>
+                </div>
+                
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="action" value="toggle_ip_restriction">
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="ip_restriction" value="1" 
+                                   {% if ip_restriction_enabled %}checked{% endif %}>
+                            فعال کردن محدودیت آی‌پی برای ویرایش و اضافه کردن مخاطبین
+                        </label>
+                        <small style="display: block; margin-top: 5px; color: #666;">
+                            در صورت غیرفعال بودن، همه کاربران می‌توانند مخاطبین را ویرایش و اضافه کنند
+                        </small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning">ذخیره تنظیمات</button>
+                </form>
+            </div>
             
             <!-- آمار سیستم -->
             <div class="settings-card">
